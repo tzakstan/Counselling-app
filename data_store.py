@@ -1,14 +1,39 @@
 import os
 import json
+import logging
 from typing import List, Optional
 from models import Student, QuestionnaireData, ClinicalObservations, Comment, GeneratedReport, CumulativeReport
 from gemini_service import generate_individual_report, generate_cumulative_report
 
+logger = logging.getLogger(__name__)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 DB_FILE = os.path.join(os.path.dirname(__file__), "students_db.json")
 CUMULATIVE_FILE = os.path.join(os.path.dirname(__file__), "cumulative_db.json")
 
+def _get_pg_conn():
+    if not DATABASE_URL:
+        return None
+    try:
+        url = DATABASE_URL.strip()
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        import psycopg2
+        conn = psycopg2.connect(url)
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS app_storage (
+                    key VARCHAR(64) PRIMARY KEY,
+                    content TEXT NOT NULL
+                );
+            """)
+        conn.commit()
+        return conn
+    except Exception as e:
+        logger.error(f"PostgreSQL connection error: {e}")
+        return None
+
 def _init_seed_data() -> List[Student]:
-    # 1. Abbas Juzer bhai Malek (From the user's exact provided sheet!)
     s1 = Student(
         id="SI-2026-001",
         name="Abbas Juzer bhai Malek",
@@ -59,7 +84,7 @@ def _init_seed_data() -> List[Student]:
         comments=[
             Comment(
                 id="c-1",
-                author="Shk. Murtaza (Program Head)",
+                author="Program Management",
                 role="Management",
                 text="Excellent profile. Very glad to see his morning Namaaz discipline and focus on reducing screen time.",
                 timestamp="12 Oct 2026, 10:45 AM"
@@ -70,7 +95,6 @@ def _init_seed_data() -> List[Student]:
     )
     s1.report = generate_individual_report(s1)
 
-    # 2. Mohammed Ali Asgar bhai Rangwala (Critical / Follow-up case)
     s2 = Student(
         id="SI-2026-002",
         name="Mohammed Ali Asgar bhai Rangwala",
@@ -121,17 +145,10 @@ def _init_seed_data() -> List[Student]:
         comments=[
             Comment(
                 id="c-2",
-                author="Counsellor Fatima",
+                author="Lead Counsellor",
                 role="Counsellor",
                 text="Flagged for a second session. Will also coordinate with his dorm mentor to ensure he is socializing during sports hour.",
                 timestamp="12 Oct 2026, 11:15 AM"
-            ),
-            Comment(
-                id="c-3",
-                author="Mulla Husain (Supervisor)",
-                role="Management",
-                text="Noted. I know his family in Mumbai; let's support him with encouragement and keep pressure off during the camp.",
-                timestamp="12 Oct 2026, 11:30 AM"
             )
         ],
         created_at="2026-10-12T10:00:00",
@@ -139,64 +156,30 @@ def _init_seed_data() -> List[Student]:
     )
     s2.report = generate_individual_report(s2)
 
-    # 3. Taher Husain bhai Jamali (Mild observation case)
-    s3 = Student(
-        id="SI-2026-003",
-        name="Taher Husain bhai Jamali",
-        age=14,
-        fathers_occupation="Textile Trading",
-        mothers_occupation="Teacher",
-        place="Surat",
-        batch="Batch 2026-A",
-        is_confidential=False,
-        status="Evaluated",
-        questionnaire=QuestionnaireData(
-            pre_session_query="",
-            strengths_rely_on="Making friends laugh, sports teamwork",
-            weaknesses_not_rely_on="Staying organized and keeping room clean",
-            worry_overthink="Missing home and mother's cooking during first 2 days",
-            enjoy_3_things="Football, playing synthesizer, outdoor trips",
-            insecure_uncomfortable="Being in a huge crowd where I know nobody",
-            proud_of_yourself="Selected as captain for local football team",
-            confidence_source="Support of teammates and encouragement from coaches",
-            feel_understood="Yes, very close to mother",
-            go_to_person="Mother",
-            parents_different="Nothing, they are very supportive",
-            study_motivation="I want to learn, but easily get distracted by social media",
-            future_career="Architecture or Design",
-            adult_life_imagined="Building innovative houses and mosques",
-            fears_barriers_future="Math scores sometimes dip",
-            alter_improve_self="Focus and time management",
-            magic_button_wish="Teleportation to visit family whenever I want",
-            session_feeling="Very friendly and fun",
-            unshared_thoughts="None",
-            takeaway="Need to be more disciplined with hostel routine.",
-            moula_guidance_practice="Staying focused on Ilm and showing adab to teachers and peers."
-        ),
-        observations=ClinicalObservations(
-            emotional_expression="Fully Expressive",
-            confidence_level="Fluctuating",
-            anxiety_restlessness="A little bit",
-            clarity_vs_confusion="Clear",
-            family_pressure_themes="No",
-            fear_of_failure_judgement="Mild",
-            motivational_level="High",
-            identity_struggles="None Observed",
-            peer_influence="Positive",
-            emotional_maturity="Good"
-        ),
-        counsellor_raw_remarks="High energy, likable boy. Initial mild homesickness which is rapidly subsiding as he makes peers in the hostel.",
-        prescribed_exercise_raw="1. Room organization habit check before morning assembly.\n2. Active participation in evening football matches.",
-        comments=[],
-        created_at="2026-10-12T10:30:00",
-        updated_at="2026-10-12T10:30:00"
-    )
-    s3.report = generate_individual_report(s3)
-
-    return [s1, s2, s3]
+    return [s1, s2]
 
 
 def load_students() -> List[Student]:
+    conn = _get_pg_conn()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT content FROM app_storage WHERE key = 'students';")
+                row = cur.fetchone()
+                if row:
+                    data = json.loads(row[0])
+                    return [Student(**item) for item in data]
+                else:
+                    # Initialize in Postgres once
+                    seeds = _init_seed_data()
+                    save_students(seeds)
+                    return seeds
+        except Exception as e:
+            logger.error(f"Error reading students from PostgreSQL: {e}")
+        finally:
+            conn.close()
+
+    # Fallback to local JSON file
     if not os.path.exists(DB_FILE):
         seeds = _init_seed_data()
         save_students(seeds)
@@ -204,15 +187,32 @@ def load_students() -> List[Student]:
     try:
         with open(DB_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
-            # If the file exists, return the exact data (even if empty list [])
             return [Student(**item) for item in data]
     except Exception:
         return []
 
 
 def save_students(students: List[Student]):
+    data_json = json.dumps([s.model_dump() for s in students], indent=2, ensure_ascii=False)
+    
+    conn = _get_pg_conn()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO app_storage (key, content)
+                    VALUES ('students', %s)
+                    ON CONFLICT (key) DO UPDATE SET content = EXCLUDED.content;
+                """, (data_json,))
+            conn.commit()
+        except Exception as e:
+            logger.error(f"Error saving students to PostgreSQL: {e}")
+        finally:
+            conn.close()
+
+    # Also save locally
     with open(DB_FILE, "w", encoding="utf-8") as f:
-        json.dump([s.model_dump() for s in students], f, indent=2, ensure_ascii=False)
+        f.write(data_json)
 
 
 def get_student_by_id(student_id: str) -> Optional[Student]:
@@ -236,6 +236,7 @@ def save_or_update_student(student: Student) -> Student:
     save_students(students)
     return student
 
+
 def delete_student(student_id: str) -> bool:
     students = load_students()
     initial_len = len(students)
@@ -245,10 +246,27 @@ def delete_student(student_id: str) -> bool:
         return True
     return False
 
+
 def get_or_create_cumulative_report() -> CumulativeReport:
     students = load_students()
     rep = generate_cumulative_report(students)
-    with open(CUMULATIVE_FILE, "w", encoding="utf-8") as f:
-        json.dump(rep.model_dump(), f, indent=2, ensure_ascii=False)
-    return rep
+    data_json = json.dumps(rep.model_dump(), indent=2, ensure_ascii=False)
 
+    conn = _get_pg_conn()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO app_storage (key, content)
+                    VALUES ('cumulative', %s)
+                    ON CONFLICT (key) DO UPDATE SET content = EXCLUDED.content;
+                """, (data_json,))
+            conn.commit()
+        except Exception as e:
+            logger.error(f"Error saving cumulative report to PostgreSQL: {e}")
+        finally:
+            conn.close()
+
+    with open(CUMULATIVE_FILE, "w", encoding="utf-8") as f:
+        f.write(data_json)
+    return rep

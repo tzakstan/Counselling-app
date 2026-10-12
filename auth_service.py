@@ -1,7 +1,11 @@
 import os
 import json
+import logging
 from typing import Dict, Any
 
+logger = logging.getLogger(__name__)
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 USERS_FILE = os.path.join(os.path.dirname(__file__), "users_db.json")
 
 DEFAULT_USERS = {
@@ -21,7 +25,45 @@ DEFAULT_USERS = {
     }
 }
 
+def _get_pg_conn():
+    if not DATABASE_URL:
+        return None
+    try:
+        url = DATABASE_URL.strip()
+        if url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql://", 1)
+        import psycopg2
+        conn = psycopg2.connect(url)
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS app_storage (
+                    key VARCHAR(64) PRIMARY KEY,
+                    content TEXT NOT NULL
+                );
+            """)
+        conn.commit()
+        return conn
+    except Exception as e:
+        logger.error(f"PostgreSQL connection error in auth_service: {e}")
+        return None
+
 def load_users() -> Dict[str, Any]:
+    conn = _get_pg_conn()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("SELECT content FROM app_storage WHERE key = 'users';")
+                row = cur.fetchone()
+                if row:
+                    return json.loads(row[0])
+                else:
+                    save_users(DEFAULT_USERS)
+                    return DEFAULT_USERS
+        except Exception as e:
+            logger.error(f"Error reading users from PostgreSQL: {e}")
+        finally:
+            conn.close()
+
     if not os.path.exists(USERS_FILE):
         save_users(DEFAULT_USERS)
         return DEFAULT_USERS
@@ -33,8 +75,24 @@ def load_users() -> Dict[str, Any]:
         return DEFAULT_USERS
 
 def save_users(users: Dict[str, Any]):
+    data_json = json.dumps(users, indent=2, ensure_ascii=False)
+    conn = _get_pg_conn()
+    if conn:
+        try:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO app_storage (key, content)
+                    VALUES ('users', %s)
+                    ON CONFLICT (key) DO UPDATE SET content = EXCLUDED.content;
+                """, (data_json,))
+            conn.commit()
+        except Exception as e:
+            logger.error(f"Error saving users to PostgreSQL: {e}")
+        finally:
+            conn.close()
+
     with open(USERS_FILE, "w", encoding="utf-8") as f:
-        json.dump(users, f, indent=2, ensure_ascii=False)
+        f.write(data_json)
 
 def update_user_profile(user_id: str, new_name: str, new_username: str, new_password: str = None) -> Dict[str, Any]:
     users = load_users()
@@ -64,4 +122,3 @@ def update_user_profile(user_id: str, new_name: str, new_username: str, new_pass
 
     save_users(users)
     return user
-
