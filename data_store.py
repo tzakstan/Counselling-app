@@ -237,6 +237,14 @@ def save_or_update_student(student: Student) -> Student:
     save_students(students)
     return student
 
+def delete_student(student_id: str) -> bool:
+    students = load_students()
+    initial_len = len(students)
+    students = [s for s in students if s.id != student_id]
+    if len(students) < initial_len:
+        save_students(students)
+        return True
+    return False
 
 def get_or_create_cumulative_report() -> CumulativeReport:
     students = load_students()
