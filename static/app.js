@@ -708,9 +708,12 @@ function renderManagementDashboard() {
     let badgeClass = triage.includes('🔴') ? 'badge-red' : triage.includes('🟡') ? 'badge-amber' : 'badge-green';
 
     return `
-      <tr class="hover:bg-slate-50 transition">
+      <tr class="hover:bg-slate-50 transition cursor-pointer" onclick="openManagementPreviewModal('${s.id}')">
         <td class="p-3.5">
-          <div class="font-bold text-slate-900">${dispName}</div>
+          <div class="font-bold text-slate-900 flex items-center gap-1.5">
+            <span>${dispName}</span>
+            <span class="text-[10px] px-1.5 py-0.2 bg-slate-100 text-slate-500 rounded font-normal">Click to Preview</span>
+          </div>
           <span class="text-[10px] text-slate-400 font-mono">${s.id}</span>
         </td>
         <td class="p-3.5 text-slate-600">
@@ -728,9 +731,12 @@ function renderManagementDashboard() {
         <td class="p-3.5 text-slate-700 max-w-xs truncate">
           <span class="text-amber-800 font-medium">${s.questionnaire.moula_guidance_practice || 'General discipline'}</span>
         </td>
-        <td class="p-3.5 text-right space-x-1">
+        <td class="p-3.5 text-right space-x-1" onclick="event.stopPropagation()">
+          <button onclick="openManagementPreviewModal('${s.id}')" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 rounded text-xs font-semibold transition border border-amber-300">
+            Mini-Report
+          </button>
           <button onclick="viewStudentInManagement('${s.id}')" class="px-2.5 py-1 bg-jamea hover:bg-jamea-light text-white rounded text-xs font-semibold transition">
-            View Dossier
+            Full Dossier
           </button>
         </td>
       </tr>
@@ -738,6 +744,133 @@ function renderManagementDashboard() {
   }).join('');
 
   refreshIcons();
+}
+
+// ----------------------------------------------------
+// Management Mini-Report Preview Drawer
+// ----------------------------------------------------
+function openManagementPreviewModal(studentId) {
+  const student = state.students.find(s => s.id === studentId);
+  if (!student) return;
+
+  const modal = document.getElementById('mgmt-preview-modal');
+  const dispName = student.is_confidential ? `Candidate ${student.id} (CONFIDENTIAL)` : student.name;
+  const dispPlace = student.is_confidential ? '[City Masked]' : student.place;
+  const triage = student.report ? student.report.triage_status : '🟢 Well-Adapted';
+
+  document.getElementById('prev-modal-name').innerText = dispName;
+  document.getElementById('prev-modal-meta').innerText = `Age: ${student.age} Years | Origin: ${dispPlace} | Batch: ${student.batch} | ID: ${student.id}`;
+  
+  const triageBadge = document.getElementById('prev-modal-triage');
+  triageBadge.innerText = triage;
+  triageBadge.className = `px-2 py-0.5 rounded text-xs font-semibold ${
+    triage.includes('🔴') ? 'badge-red' : triage.includes('🟡') ? 'badge-amber' : 'badge-green'
+  }`;
+
+  // Hook export buttons directly
+  document.getElementById('prev-modal-btn-docx').onclick = () => window.open(`/api/students/${student.id}/export/docx`, '_blank');
+  document.getElementById('prev-modal-btn-pdf').onclick = () => {
+    selectStudent(student.id);
+    printStudentReport();
+  };
+  document.getElementById('prev-modal-btn-full').onclick = () => {
+    closeManagementPreviewModal();
+    viewStudentInManagement(student.id);
+  };
+
+  const content = document.getElementById('prev-modal-content');
+  const q = student.questionnaire || {};
+  const obs = student.observations || {};
+  const rep = student.report || {};
+
+  content.innerHTML = `
+    <!-- Top Highlights Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+      
+      <!-- Key Strengths & Reliability -->
+      <div class="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl">
+        <h4 class="font-bold text-emerald-900 text-xs flex items-center gap-1.5 mb-1">
+          <i data-lucide="check-circle" class="w-3.5 h-3.5 text-emerald-700"></i>
+          <span>Strengths & Peer Reliability</span>
+        </h4>
+        <p class="text-slate-700 font-medium">"${q.strengths_rely_on || 'Good participation and discipline'}"</p>
+        <p class="text-[11px] text-slate-500 mt-1">Proud of: <i>"${q.proud_of_yourself || 'Self-reliance'}"</i></p>
+      </div>
+
+      <!-- Vulnerabilities & Primary Worries -->
+      <div class="p-3 bg-amber-50/60 border border-amber-200 rounded-xl">
+        <h4 class="font-bold text-amber-900 text-xs flex items-center gap-1.5 mb-1">
+          <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-amber-700"></i>
+          <span>Primary Worry / Rumination</span>
+        </h4>
+        <p class="text-slate-700 font-medium">"${q.worry_overthink || 'General academic routine'}"</p>
+        <p class="text-[11px] text-slate-500 mt-1">Go-to Confidante: <b>${q.go_to_person || 'Family'}</b> | Insecure about: <i>"${q.insecure_uncomfortable || 'None'}"</i></p>
+      </div>
+
+    </div>
+
+    <!-- Spiritual Assimilation & Moula's Guidance Banner -->
+    <div class="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300/80 rounded-xl">
+      <h4 class="font-bold text-amber-950 text-xs flex items-center gap-1.5 mb-1">
+        <i data-lucide="book-heart" class="w-3.5 h-3.5 text-amber-700"></i>
+        <span>Moula's Guidance In Practice (Saire Ilmi Focus):</span>
+      </h4>
+      <p class="text-amber-900 text-xs font-semibold">"${q.moula_guidance_practice || 'Curtailed phone screen time and morning Namaaz habituation'}"</p>
+    </div>
+
+    <!-- Quick Clinical Observation Matrix (Radar Scorecard) -->
+    <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+      <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+        <i data-lucide="activity" class="w-3.5 h-3.5 text-emerald-700"></i>
+        <span>Clinical Observational Scorecard</span>
+      </h4>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+        <div class="bg-white p-2 rounded border border-slate-200">
+          <span class="text-slate-400 block text-[10px]">Confidence</span>
+          <span class="font-bold text-slate-800">${obs.confidence_level || 'Normal'}</span>
+        </div>
+        <div class="bg-white p-2 rounded border border-slate-200">
+          <span class="text-slate-400 block text-[10px]">Anxiety / Stress</span>
+          <span class="font-bold ${obs.anxiety_restlessness?.toLowerCase().includes('high') ? 'text-red-700' : 'text-slate-800'}">${obs.anxiety_restlessness || 'Low'}</span>
+        </div>
+        <div class="bg-white p-2 rounded border border-slate-200">
+          <span class="text-slate-400 block text-[10px]">Emotional Maturity</span>
+          <span class="font-bold text-slate-800">${obs.emotional_maturity || 'Good'}</span>
+        </div>
+        <div class="bg-white p-2 rounded border border-slate-200">
+          <span class="text-slate-400 block text-[10px]">Family Pressure</span>
+          <span class="font-bold text-slate-800">${obs.family_pressure_themes || 'No'}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Executive Summary & Recommendations -->
+    <div class="space-y-2">
+      <div class="bg-white p-3 rounded-xl border border-slate-200">
+        <h4 class="font-bold text-emerald-900 text-xs mb-1">Executive Summary:</h4>
+        <p class="text-slate-700 leading-relaxed text-xs">${rep.executive_summary || 'Student has completed intake. Full AI report can be synthesized in the Counsellor tab.'}</p>
+      </div>
+
+      <div class="bg-emerald-50/50 p-3 rounded-xl border border-emerald-200">
+        <h4 class="font-bold text-emerald-950 text-xs mb-1">Counsellor's Direct Verdict & Action Recommendation:</h4>
+        <p class="text-emerald-900 font-medium text-xs">${rep.counsellor_remarks || student.counsellor_raw_remarks || 'Appears well-adapted, respectful, and engaged in activities.'}</p>
+        ${rep.follow_up_notes ? `
+          <div class="mt-2 pt-2 border-t border-emerald-200 text-red-800 font-semibold text-xs flex items-center gap-1.5">
+            <i data-lucide="alert-triangle" class="w-3.5 h-3.5 text-red-600"></i>
+            <span>Mentor Instruction: ${rep.follow_up_notes}</span>
+          </div>
+        ` : ''}
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove('hidden');
+  refreshIcons();
+}
+
+function closeManagementPreviewModal() {
+  const modal = document.getElementById('mgmt-preview-modal');
+  if (modal) modal.classList.add('hidden');
 }
 
 function filterManagementRoster(filterType) {

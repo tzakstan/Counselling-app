@@ -698,6 +698,60 @@
   </main>
 
   <!-- ==================================================== -->
+  <!-- MODAL: MANAGEMENT MINI-REPORT & QUICK PREVIEW        -->
+  <!-- ==================================================== -->
+  <div id="mgmt-preview-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      
+      <!-- Preview Header -->
+      <div class="bg-jamea text-white p-4.5 border-b-2 border-jamea-accent flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="/static/logo.png" alt="Saire Ilmi" class="w-10 h-10 rounded-lg bg-white p-0.5 object-contain">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 id="prev-modal-name" class="font-serif text-lg font-bold text-amber-100">Abbas Juzer bhai Malek</h3>
+              <span id="prev-modal-triage" class="px-2 py-0.5 rounded text-xs font-semibold badge-green">🟢 Well-Adapted</span>
+            </div>
+            <p id="prev-modal-meta" class="text-xs text-slate-300">Age: 16 | Origin: Raipur | ID: SI-2026-001</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="prev-modal-btn-docx" class="px-2.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow">
+            <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+            <span>Word</span>
+          </button>
+          <button id="prev-modal-btn-pdf" class="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold flex items-center gap-1 transition shadow">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>PDF</span>
+          </button>
+          <button onclick="closeManagementPreviewModal()" class="p-1.5 text-slate-300 hover:text-white rounded-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Body -->
+      <div id="prev-modal-content" class="p-6 overflow-y-auto space-y-4 text-xs leading-relaxed">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+      <!-- Preview Footer -->
+      <div class="p-3.5 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs">
+        <span class="text-slate-500">Program Management Quick Snapshot</span>
+        <div class="flex items-center gap-2">
+          <button id="prev-modal-btn-full" class="px-3.5 py-1.5 bg-jamea text-white font-semibold rounded-lg hover:bg-jamea-light transition">
+            Open Full Detailed Dossier
+          </button>
+          <button onclick="closeManagementPreviewModal()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 font-semibold rounded-lg text-slate-700">
+            Close
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
   <!-- MODAL: CUMULATIVE COHORT CONCLUSIVE REPORT          -->
   <!-- ==================================================== -->
   <div id="cumulative-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">

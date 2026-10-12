@@ -204,11 +204,10 @@ def load_students() -> List[Student]:
     try:
         with open(DB_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
+            # If the file exists, return the exact data (even if empty list [])
             return [Student(**item) for item in data]
     except Exception:
-        seeds = _init_seed_data()
-        save_students(seeds)
-        return seeds
+        return []
 
 
 def save_students(students: List[Student]):
