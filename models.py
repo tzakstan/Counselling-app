@@ -75,6 +75,16 @@ class Student(BaseModel):
     created_at: str
     updated_at: str
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class UserProfile(BaseModel):
+    id: str
+    username: str
+    name: str
+    role: str  # "counsellor" or "management"
+
 class CumulativeReport(BaseModel):
     title: str = "Saire Ilmi Counselling Program - Cumulative Conclusive Cohort Dossier"
     generated_at: str

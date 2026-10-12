@@ -1,9 +1,9 @@
 // Saire Ilmi Counselling & Evaluation System - Frontend Logic
 
 let state = {
+  currentUser: null, // { id, username, name, role: 'counsellor' | 'management' }
   students: [],
   activeStudentId: null,
-  currentRole: 'counsellor', // 'counsellor' | 'management'
   activeTab: 'form', // 'form' | 'report'
   activeFilter: 'all',
   cumulativeData: null
@@ -13,6 +13,19 @@ let deferredPrompt = null;
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
+  // Check stored user session
+  const storedUser = localStorage.getItem('saire_ilmi_user');
+  if (storedUser) {
+    try {
+      state.currentUser = JSON.parse(storedUser);
+      applyUserRole(state.currentUser);
+    } catch (e) {
+      showLoginModal();
+    }
+  } else {
+    showLoginModal();
+  }
+
   // Register Service Worker for Android PWA
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/static/sw.js')
@@ -35,6 +48,103 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
   lucide.createIcons();
 });
+
+// ----------------------------------------------------
+// Authentication & Access Control
+// ----------------------------------------------------
+function showLoginModal() {
+  const modal = document.getElementById('login-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function hideLoginModal() {
+  const modal = document.getElementById('login-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function quickFillLogin(username, password) {
+  document.getElementById('login-username').value = username;
+  document.getElementById('login-password').value = password;
+}
+
+async function handleLoginSubmit(e) {
+  e.preventDefault();
+  const u = document.getElementById('login-username').value.trim();
+  const p = document.getElementById('login-password').value.trim();
+  const errorMsg = document.getElementById('login-error-msg');
+  const btn = document.getElementById('btn-login-submit');
+
+  errorMsg.classList.add('hidden');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: u, password: p })
+    });
+    if (!res.ok) throw new Error('Invalid credentials');
+    const user = await res.json();
+    state.currentUser = user;
+    localStorage.setItem('saire_ilmi_user', JSON.stringify(user));
+
+    applyUserRole(user);
+    hideLoginModal();
+    showToast(`Welcome, ${user.name}`);
+  } catch (err) {
+    errorMsg.classList.remove('hidden');
+  } finally {
+    btn.disabled = false;
+    refreshIcons();
+  }
+}
+
+function logout() {
+  state.currentUser = null;
+  localStorage.removeItem('saire_ilmi_user');
+  showLoginModal();
+}
+
+function applyUserRole(user) {
+  if (!user) return;
+  const nameEl = document.getElementById('user-display-name');
+  const roleEl = document.getElementById('user-display-role');
+  const avatar = document.getElementById('user-avatar-icon');
+
+  if (nameEl) nameEl.innerText = user.name;
+  if (roleEl) roleEl.innerText = user.role === 'counsellor' ? 'Counsellor Portal' : 'Management Portal';
+  if (avatar) avatar.setAttribute('data-lucide', user.role === 'counsellor' ? 'user-pen' : 'building-2');
+
+  const roleBanner = document.getElementById('active-role-text');
+  const counsellorView = document.getElementById('view-counsellor');
+  const managementView = document.getElementById('view-management');
+
+  if (user.role === 'counsellor') {
+    roleBanner.innerText = "Counsellor Workspace: Enter raw notes, conduct 1-on-1 evaluations, and synthesize structured reports.";
+    counsellorView.classList.remove('hidden');
+    managementView.classList.add('hidden');
+    enableCounsellorEditing(true);
+  } else {
+    roleBanner.innerText = "Management Portal: Review pastoral evaluations, track candidates requiring second sessions, and leave notes.";
+    counsellorView.classList.add('hidden');
+    managementView.classList.remove('hidden');
+    enableCounsellorEditing(false); // Disable editing rights
+    renderManagementDashboard();
+  }
+  refreshIcons();
+}
+
+function enableCounsellorEditing(canEdit) {
+  // If user is Management, protect intake and report fields from accidental alteration
+  const genBtn = document.getElementById('btn-generate-ai');
+  if (genBtn) genBtn.style.display = canEdit ? 'flex' : 'none';
+
+  const inputs = document.querySelectorAll('#counsellor-tab-form input, #counsellor-tab-form textarea');
+  inputs.forEach(el => el.readOnly = !canEdit);
+
+  const reportInputs = document.querySelectorAll('#counsellor-tab-report textarea');
+  reportInputs.forEach(el => el.readOnly = !canEdit);
+}
 
 function installPWA() {
   if (deferredPrompt) {

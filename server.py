@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
 
-from models import Student, GeneratedReport, Comment, CumulativeReport
+from models import Student, GeneratedReport, Comment, CumulativeReport, LoginRequest, UserProfile
 from data_store import (
     load_students,
     get_student_by_id,
@@ -22,6 +22,51 @@ from gemini_service import (
 from docx_generator import generate_student_docx, generate_cumulative_docx
 
 app = FastAPI(title="Saire Ilmi Counselling & Evaluation System")
+
+# Registered accounts
+USERS_DB = {
+    "counsellor": {
+        "id": "usr-counsellor",
+        "username": "counsellor",
+        "password": "jamea@counsellor",
+        "name": "Dr. Amatullah (Lead Counsellor)",
+        "role": "counsellor"
+    },
+    "counsellor@jamea.edu": {
+        "id": "usr-counsellor",
+        "username": "counsellor",
+        "password": "jamea@counsellor",
+        "name": "Dr. Amatullah (Lead Counsellor)",
+        "role": "counsellor"
+    },
+    "management": {
+        "id": "usr-mgmt",
+        "username": "management",
+        "password": "jamea@management",
+        "name": "Shk. Murtaza (Program Director)",
+        "role": "management"
+    },
+    "management@jamea.edu": {
+        "id": "usr-mgmt",
+        "username": "management",
+        "password": "jamea@management",
+        "name": "Shk. Murtaza (Program Director)",
+        "role": "management"
+    }
+}
+
+@app.post("/api/auth/login", response_model=UserProfile)
+def login(creds: LoginRequest):
+    u = USERS_DB.get(creds.username.strip().lower())
+    if not u or u["password"] != creds.password.strip():
+        raise HTTPException(status_code=401, detail="Invalid username or password")
+    return UserProfile(
+        id=u["id"],
+        username=u["username"],
+        name=u["name"],
+        role=u["role"]
+    )
+
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
