@@ -1249,13 +1249,181 @@ function printCumulativeReport() {
 // ----------------------------------------------------
 // Quick-Fill Demo & New Student Creation
 // ----------------------------------------------------
-function loadAbbasDemoData() {
-  const abbas = state.students.find(s => s.name.toLowerCase().includes('abbas'));
-  if (abbas) {
-    selectStudent(abbas.id);
+const BENCHMARK_ABBAS_SAMPLE = {
+  id: "SI-2026-001",
+  name: "Abbas Juzer bhai Malek",
+  age: 16,
+  fathers_occupation: "Business",
+  mothers_occupation: "Business",
+  place: "Raipur",
+  batch: "Batch 2026-A",
+  is_confidential: false,
+  status: "Evaluated",
+  questionnaire: {
+    pre_session_query: "",
+    strengths_rely_on: "Morning namaaz wake up, to hang clothes properly",
+    weaknesses_not_rely_on: "Household chores not doing sometimes",
+    worry_overthink: "Exam results _ switching to solution oriented thinking",
+    enjoy_3_things: "Cricket, friends, TV",
+    insecure_uncomfortable: "Laptop that is very dear, Ammi Abba, Dada Dadi",
+    proud_of_yourself: "My friends rely on me",
+    confidence_source: "Any competition in sports_ I'm prepared so I'm confident",
+    feel_understood: "Yes",
+    go_to_person: "Elder sister",
+    parents_different: "All okay",
+    study_motivation: "Both_ I have to and I like to",
+    future_career: "May be MBBS",
+    adult_life_imagined: "Life adventures _ solo travelling",
+    fears_barriers_future: "Not as such",
+    alter_improve_self: "Handwriting",
+    magic_button_wish: "Flying power I wish, want to fly like birds in the sky",
+    session_feeling: "Relaxing",
+    unshared_thoughts: "Nothing as such",
+    takeaway: "Nothing specific and got a good experience.",
+    moula_guidance_practice: "Not using phone much and reducing it_ I'm trying."
+  },
+  observations: {
+    emotional_expression: "Fully Expressive",
+    confidence_level: "Confident",
+    anxiety_restlessness: "A little bit",
+    clarity_vs_confusion: "Clear",
+    family_pressure_themes: "No",
+    fear_of_failure_judgement: "Mild",
+    motivational_level: "High",
+    identity_struggles: "None Observed",
+    peer_influence: "Positive",
+    emotional_maturity: "Good"
+  },
+  counsellor_raw_remarks: "Seems all is good. Well-mannered and respectful.",
+  prescribed_exercise_raw: "1. Solution-oriented cognitive reframing journal.\n2. Handwriting refinement practice.\n3. Digital mindfulness log for screen time."
+};
+
+async function loadAbbasDemoData() {
+  // 1. Check if Abbas already exists in currently loaded students
+  const existingAbbas = state.students.find(s => s.name && s.name.toLowerCase().includes('abbas'));
+  if (existingAbbas) {
+    selectStudent(existingAbbas.id);
     switchCounsellorTab('form');
-    showToast("Loaded Abbas's evaluation intake from sheet!");
+    showToast("Loaded Abbas (Sample) from database!");
+    return;
   }
+
+  // 2. If Abbas was deleted or missing, restore into PostgreSQL via backend
+  showToast("Restoring sample candidate (Abbas) into database...");
+  try {
+    const res = await fetch('/api/students/load-sample', { method: 'POST' });
+    if (res.ok) {
+      const saved = await res.json();
+      await fetchStudents();
+      selectStudent(saved.id);
+      switchCounsellorTab('form');
+      showToast("Successfully restored Abbas (Sample)!");
+      return;
+    }
+  } catch (err) {
+    console.warn("Backend load-sample endpoint not available yet, using fallback POST:", err);
+  }
+
+  // 3. Fallback: Save directly via standard POST /api/students
+  try {
+    const res = await fetch('/api/students', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(BENCHMARK_ABBAS_SAMPLE)
+    });
+    if (res.ok) {
+      const saved = await res.json();
+      await fetchStudents();
+      selectStudent(saved.id);
+      switchCounsellorTab('form');
+      showToast("Successfully restored Abbas (Sample) into database!");
+      return;
+    }
+  } catch (err) {
+    console.warn("Direct POST failed:", err);
+  }
+
+  // 4. In-memory session fallback
+  state.students.unshift({ ...BENCHMARK_ABBAS_SAMPLE });
+  renderStudentList();
+  selectStudent(BENCHMARK_ABBAS_SAMPLE.id);
+  switchCounsellorTab('form');
+  showToast("Loaded Abbas (Sample) into active view!");
+}
+
+function autoFillActiveFormWithSample() {
+  const std = getActiveStudent();
+  if (!std) {
+    showToast("Please select or create a candidate first.");
+    return;
+  }
+
+  // Fill General Info if default
+  const nameEl = document.getElementById('form-name');
+  if (nameEl && (!nameEl.value || nameEl.value === "New Candidate")) {
+    nameEl.value = "Abbas Juzer bhai Malek";
+    const ageEl = document.getElementById('form-age'); if (ageEl) ageEl.value = 16;
+    const placeEl = document.getElementById('form-place'); if (placeEl) placeEl.value = "Raipur";
+    const fatherEl = document.getElementById('form-father-occ'); if (fatherEl) fatherEl.value = "Business";
+    const motherEl = document.getElementById('form-mother-occ'); if (motherEl) motherEl.value = "Business";
+    const batchEl = document.getElementById('form-batch'); if (batchEl) batchEl.value = "Batch 2026-A";
+  }
+
+  // 21 Intake Questions
+  const qMap = {
+    'q-pre-query': BENCHMARK_ABBAS_SAMPLE.questionnaire.pre_session_query,
+    'q-strengths': BENCHMARK_ABBAS_SAMPLE.questionnaire.strengths_rely_on,
+    'q-weaknesses': BENCHMARK_ABBAS_SAMPLE.questionnaire.weaknesses_not_rely_on,
+    'q-worry': BENCHMARK_ABBAS_SAMPLE.questionnaire.worry_overthink,
+    'q-enjoy': BENCHMARK_ABBAS_SAMPLE.questionnaire.enjoy_3_things,
+    'q-insecure': BENCHMARK_ABBAS_SAMPLE.questionnaire.insecure_uncomfortable,
+    'q-proud': BENCHMARK_ABBAS_SAMPLE.questionnaire.proud_of_yourself,
+    'q-confidence': BENCHMARK_ABBAS_SAMPLE.questionnaire.confidence_source,
+    'q-understood': BENCHMARK_ABBAS_SAMPLE.questionnaire.feel_understood,
+    'q-goto-person': BENCHMARK_ABBAS_SAMPLE.questionnaire.go_to_person,
+    'q-parents-diff': BENCHMARK_ABBAS_SAMPLE.questionnaire.parents_different,
+    'q-study-motivation': BENCHMARK_ABBAS_SAMPLE.questionnaire.study_motivation,
+    'q-future-career': BENCHMARK_ABBAS_SAMPLE.questionnaire.future_career,
+    'q-adult-life': BENCHMARK_ABBAS_SAMPLE.questionnaire.adult_life_imagined,
+    'q-fears-future': BENCHMARK_ABBAS_SAMPLE.questionnaire.fears_barriers_future,
+    'q-alter-improve': BENCHMARK_ABBAS_SAMPLE.questionnaire.alter_improve_self,
+    'q-magic-button': BENCHMARK_ABBAS_SAMPLE.questionnaire.magic_button_wish,
+    'q-session-feeling': BENCHMARK_ABBAS_SAMPLE.questionnaire.session_feeling,
+    'q-unshared': BENCHMARK_ABBAS_SAMPLE.questionnaire.unshared_thoughts,
+    'q-takeaway': BENCHMARK_ABBAS_SAMPLE.questionnaire.takeaway,
+    'q-moula-guidance': BENCHMARK_ABBAS_SAMPLE.questionnaire.moula_guidance_practice
+  };
+
+  for (const [id, val] of Object.entries(qMap)) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+
+  // 10 Clinical Observations
+  const obsMap = {
+    'obs-emotional': BENCHMARK_ABBAS_SAMPLE.observations.emotional_expression,
+    'obs-confidence': BENCHMARK_ABBAS_SAMPLE.observations.confidence_level,
+    'obs-anxiety': BENCHMARK_ABBAS_SAMPLE.observations.anxiety_restlessness,
+    'obs-clarity': BENCHMARK_ABBAS_SAMPLE.observations.clarity_vs_confusion,
+    'obs-pressure': BENCHMARK_ABBAS_SAMPLE.observations.family_pressure_themes,
+    'obs-fear': BENCHMARK_ABBAS_SAMPLE.observations.fear_of_failure_judgement,
+    'obs-motivation': BENCHMARK_ABBAS_SAMPLE.observations.motivational_level,
+    'obs-identity': BENCHMARK_ABBAS_SAMPLE.observations.identity_struggles,
+    'obs-peer': BENCHMARK_ABBAS_SAMPLE.observations.peer_influence,
+    'obs-maturity': BENCHMARK_ABBAS_SAMPLE.observations.emotional_maturity
+  };
+
+  for (const [id, val] of Object.entries(obsMap)) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  }
+
+  const remarksEl = document.getElementById('form-raw-remarks');
+  if (remarksEl) remarksEl.value = BENCHMARK_ABBAS_SAMPLE.counsellor_raw_remarks;
+  const exEl = document.getElementById('form-raw-exercise');
+  if (exEl) exEl.value = BENCHMARK_ABBAS_SAMPLE.prescribed_exercise_raw;
+
+  showToast("Auto-filled form with sample responses! Click 'Save Intake Details' or 'Generate AI Report'.");
 }
 
 async function createNewStudent() {

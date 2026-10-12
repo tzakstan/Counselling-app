@@ -430,8 +430,12 @@
               </div>
             </div>
 
-            <!-- Save Form Changes -->
-            <div class="flex items-center justify-end gap-3 pt-2">
+            <!-- Save & Auto-Fill Form Changes -->
+            <div class="flex items-center justify-between gap-3 pt-2">
+              <button onclick="autoFillActiveFormWithSample()" type="button" class="px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 font-semibold text-xs rounded-lg transition shadow-sm flex items-center gap-1.5" title="Fill active candidate form with benchmark evaluation responses">
+                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-700"></i>
+                <span>Auto-Fill Sample Data</span>
+              </button>
               <button onclick="saveStudentFormData()" class="px-5 py-2 bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition shadow flex items-center gap-1.5">
                 <i data-lucide="save" class="w-3.5 h-3.5"></i>
                 <span>Save Intake Details</span>

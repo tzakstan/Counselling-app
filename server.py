@@ -15,7 +15,8 @@ from data_store import (
     delete_student,
     get_or_create_cumulative_report,
     check_db_health,
-    set_runtime_database_url
+    set_runtime_database_url,
+    get_sample_student
 )
 from gemini_service import (
     generate_individual_report,
@@ -80,6 +81,16 @@ def read_root():
 @app.get("/api/students", response_model=List[Student])
 def get_all_students():
     return load_students()
+
+@app.get("/api/students/sample-data", response_model=Student)
+def get_sample_student_data():
+    return get_sample_student()
+
+@app.post("/api/students/load-sample", response_model=Student)
+def load_sample_student():
+    sample = get_sample_student()
+    sample.updated_at = datetime.now().isoformat()
+    return save_or_update_student(sample)
 
 @app.get("/api/students/{student_id}", response_model=Student)
 def get_student(student_id: str):

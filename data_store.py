@@ -288,6 +288,11 @@ def _init_seed_data() -> List[Student]:
     return [s1, s2]
 
 
+def get_sample_student() -> Student:
+    seeds = _init_seed_data()
+    return seeds[0]
+
+
 def load_students() -> List[Student]:
     conn = _get_pg_conn()
     if conn:
