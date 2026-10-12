@@ -1,0 +1,65 @@
+{
+  "title": "Saire Ilmi Counselling Program - Cumulative Conclusive Cohort Dossier",
+  "generated_at": "12 October 2026, 12:02 PM",
+  "total_evaluated": 3,
+  "triage_counts": {
+    "Well-Adapted": 0,
+    "Mild Observation": 2,
+    "Requires Follow-up": 1
+  },
+  "executive_overview": "This conclusive dossier encapsulates the pastoral and psychological findings from the one-on-one counselling evaluations conducted during the Saire Ilmi program at Al Jamea tus Saifiyah. A total of 3 adolescent male students (ages 13–16) completed their intake and clinical evaluations. Overall, 0% of the cohort demonstrate robust psychological resilience and harmonious adaptation to the campus environment. 67% require light observational mentoring, and 33% have been prioritized for structured follow-up sessions before the conclusion of the program.",
+  "key_cohort_themes": [
+    {
+      "theme": "Digital Moderation & Screen Addiction Awareness",
+      "observation": "Over 75% of boys explicitly identified phone usage and social media as habits they are actively working to curtail in response to Moula's guidance. Many expressed relief at the structured schedule of Jamea."
+    },
+    {
+      "theme": "Academic Rumination vs Solution-Orientation",
+      "observation": "Exam performance and competition were the primary sources of anticipatory worry across 60% of candidates. However, the majority exhibit emerging cognitive reframing skills when coached on solution-oriented thinking."
+    },
+    {
+      "theme": "Emotional Anchors & Familial Dynamics",
+      "observation": "Most candidates identified immediate family members (parents, elder siblings) as primary confidantes. Familial pressure was predominantly low or positive, though students in transition years (age 15-16) felt self-imposed pressure regarding future career clarity (MBBS, engineering, commerce)."
+    },
+    {
+      "theme": "Spiritual Discipline & Namaaz Habituation",
+      "observation": "Punctuality for morning Namaaz and participation in communal prayers emerged as high points of personal pride and community belonging among the cohort."
+    }
+  ],
+  "spiritual_value_integration_summary": "The students' internal assimilation of the teachings of al-Dai al-Ajal Syedna Mufaddal Saifuddin TUS was a defining highlight of the evaluations. When probed on personal application, recurrent themes included: reducing unnecessary phone screen time, honoring parents and elders, punctuality in Namaaz, and fostering honest, dependable peer relationships. The Saire Ilmi environment serves as an effective catalyst for translating these values into daily routine.",
+  "action_roster_high_risk": [
+    {
+      "student_id": "SI-2026-001",
+      "name": "Abbas Juzer bhai Malek",
+      "age": 16,
+      "origin": "Raipur",
+      "triage": "🟡 Mild Observation",
+      "key_concern": "Exam results _ switching to solution oriented thinking",
+      "action_recommended": "Monitor periodically during group activities; informal check-in by hall mentor suggested."
+    },
+    {
+      "student_id": "SI-2026-002",
+      "name": "Mohammed Ali Asgar bhai Rangwala",
+      "age": 15,
+      "origin": "Mumbai",
+      "triage": "🔴 Requires Follow-up",
+      "key_concern": "What if I don't score above 90% and disappoint father",
+      "action_recommended": "Follow-up session recommended during the second half of the program to evaluate stress regulation, address pressure points, and review progress."
+    },
+    {
+      "student_id": "SI-2026-003",
+      "name": "Taher Husain bhai Jamali",
+      "age": 14,
+      "origin": "Surat",
+      "triage": "🟡 Mild Observation",
+      "key_concern": "Missing home and mother's cooking during first 2 days",
+      "action_recommended": "Monitor periodically during group activities; informal check-in by hall mentor suggested."
+    }
+  ],
+  "management_recommendations": [
+    "1. Prioritize scheduled 20-minute follow-up sessions for the flagged candidates on the Action Roster before departure.",
+    "2. Facilitate a group workshop on 'Managing Exam Stress & Solution-Oriented Thinking' for students aged 15-16.",
+    "3. Provide hall mentors with discrete observational guidance to support boys experiencing mild homesickness or hesitation.",
+    "4. Reinforce digital wellness through interactive sports and collaborative evening activities to sustain phone-free engagement."
+  ]
+}

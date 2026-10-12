@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Saire Ilmi Counselling & Evaluation Hub — Al Jamea tus Saifiyah</title>
+  <meta name="theme-color" content="#143829">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Saire Ilmi">
+  <link rel="manifest" href="/static/manifest.json">
+  <link rel="apple-touch-icon" href="/static/icon-192.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/style.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            jamea: {
+              DEFAULT: '#143829',
+              dark: '#0c2419',
+              light: '#1e523c',
+              accent: '#b48e3c',
+              accentLight: '#f5eedc',
+              gold: '#c5a059'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 flex flex-col">
+
+  <!-- TOP HEADER / BRAND BAR -->
+  <header class="bg-jamea text-white shadow-md border-b-2 border-jamea-accent sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-full bg-jamea-gold text-jamea-dark flex items-center justify-center font-bold text-lg shadow border border-amber-200">
+          <i data-lucide="shield-check" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-serif text-lg sm:text-xl font-bold tracking-wide text-amber-100">AL JAMEA TUS SAIFIYAH</h1>
+            <span class="text-xs px-2 py-0.5 rounded bg-jamea-light text-amber-200 font-medium">Saire Ilmi 1448H</span>
+          </div>
+          <p class="text-xs text-slate-300">Student Counselling & Psychological Evaluation System</p>
+        </div>
+      </div>
+
+      <!-- Controls & Role Selector -->
+      <div class="flex items-center flex-wrap gap-2.5">
+        
+        <!-- Role Switcher -->
+        <div class="bg-jamea-dark/70 p-1 rounded-lg flex items-center border border-emerald-900/50 text-xs">
+          <button id="role-counsellor-btn" onclick="setRole('counsellor')" class="px-3 py-1.5 rounded-md font-semibold transition flex items-center gap-1.5 bg-jamea-accent text-slate-900 shadow">
+            <i data-lucide="user-pen" class="w-3.5 h-3.5"></i>
+            <span>Counsellor Portal</span>
+          </button>
+          <button id="role-management-btn" onclick="setRole('management')" class="px-3 py-1.5 rounded-md font-semibold transition flex items-center gap-1.5 text-slate-300 hover:text-white">
+            <i data-lucide="building-2" class="w-3.5 h-3.5"></i>
+            <span>Management Portal</span>
+          </button>
+        </div>
+
+        <!-- Install on Phone Button (PWA) -->
+        <button id="pwa-install-btn" onclick="installPWA()" class="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-900 text-xs font-bold flex items-center gap-1.5 transition shadow">
+          <i data-lucide="smartphone" class="w-3.5 h-3.5"></i>
+          <span>Install App</span>
+        </button>
+
+        <!-- Cumulative Conclusive Report Button -->
+        <button onclick="openCumulativeModal()" class="px-3 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-amber-200 text-xs font-semibold flex items-center gap-1.5 border border-emerald-600 transition shadow">
+          <i data-lucide="file-bar-chart" class="w-3.5 h-3.5 text-amber-300"></i>
+          <span>Cumulative Cohort Dossier</span>
+        </button>
+
+        <!-- Settings / API Key Button -->
+        <button onclick="openSettingsModal()" class="p-2 rounded-lg bg-jamea-light hover:bg-emerald-700 text-slate-200 text-xs transition border border-emerald-800" title="API Key Settings">
+          <i data-lucide="settings" class="w-4 h-4"></i>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ROLE BANNER -->
+  <div id="role-banner" class="bg-emerald-900/20 border-b border-emerald-200/60 px-6 py-2 text-xs flex items-center justify-between text-slate-600">
+    <div class="flex items-center gap-2">
+      <span class="inline-block w-2 h-2 rounded-full bg-emerald-600 animate-pulse"></span>
+      <span id="active-role-text" class="font-medium text-slate-800">Counsellor Workspace: Enter raw notes, conduct 1-on-1 evaluations, and synthesize structured reports.</span>
+    </div>
+    <div class="flex items-center gap-3 text-xs">
+      <span class="text-slate-500">Program: <b>Boys Ages 13–16</b></span>
+      <span class="text-slate-300">|</span>
+      <span id="ai-status-indicator" class="text-emerald-700 font-medium flex items-center gap-1">
+        <i data-lucide="sparkles" class="w-3 h-3"></i> AI Engine Ready
+      </span>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 flex flex-col">
+
+    <!-- ========================================== -->
+    <!-- VIEW 1: COUNSELLOR WORKSPACE               -->
+    <!-- ========================================== -->
+    <div id="view-counsellor" class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+      <!-- Left Column: Student List & Actions (4 cols) -->
+      <aside class="lg:col-span-4 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-175px)]">
+        
+        <!-- Sidebar Header -->
+        <div class="p-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+          <div>
+            <h2 class="font-serif font-bold text-slate-900 text-base">Students Roster</h2>
+            <p class="text-xs text-slate-500">1-on-1 Evaluations for Saire Ilmi</p>
+          </div>
+          <button onclick="createNewStudent()" class="px-2.5 py-1.5 bg-jamea text-white hover:bg-jamea-light text-xs font-semibold rounded-lg flex items-center gap-1 transition shadow-sm">
+            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+            <span>New Student</span>
+          </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="p-3 border-b border-slate-100">
+          <div class="relative">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+            <input id="student-search-input" oninput="filterStudentList()" type="text" placeholder="Search by name, place, or ID..." 
+                   class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-100/70 border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-emerald-600 focus:bg-white transition">
+          </div>
+        </div>
+
+        <!-- Student List Items -->
+        <div id="student-list-container" class="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1">
+          <!-- Populated dynamically via JS -->
+        </div>
+
+        <!-- Quick Demo Loader Footer -->
+        <div class="p-3 border-t border-slate-200 bg-slate-50 text-xs flex items-center justify-between">
+          <span class="text-slate-500">Quick Test:</span>
+          <button onclick="loadAbbasDemoData()" class="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 font-medium rounded text-xs flex items-center gap-1 transition border border-amber-300">
+            <i data-lucide="sparkle" class="w-3 h-3 text-amber-700"></i>
+            <span>Load Abbas (Sample)</span>
+          </button>
+        </div>
+      </aside>
+
+      <!-- Right Column: Student Form & Report Tabs (8 cols) -->
+      <section class="lg:col-span-8 flex flex-col bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden h-[calc(100vh-175px)]">
+        
+        <!-- Header with Tabs and Actions -->
+        <div class="p-4 border-b border-slate-200 bg-slate-50/80 flex flex-wrap items-center justify-between gap-3">
+          
+          <!-- Student Active Details -->
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 id="active-student-name" class="font-serif font-bold text-slate-900 text-lg">Abbas Juzer bhai Malek</h2>
+              <span id="active-student-badge" class="px-2 py-0.5 rounded text-xs font-semibold badge-green">🟢 Well-Adapted</span>
+            </div>
+            <p id="active-student-meta" class="text-xs text-slate-500">Age: 16 | Origin: Raipur | ID: SI-2026-001</p>
+          </div>
+
+          <!-- Tab Switches -->
+          <div class="flex items-center gap-2">
+            <div class="bg-slate-200/80 p-1 rounded-lg flex items-center text-xs font-semibold">
+              <button id="tab-btn-form" onclick="switchCounsellorTab('form')" class="px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm transition flex items-center gap-1">
+                <i data-lucide="clipboard-pen" class="w-3.5 h-3.5 text-emerald-700"></i>
+                <span>Evaluation Form</span>
+              </button>
+              <button id="tab-btn-report" onclick="switchCounsellorTab('report')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition flex items-center gap-1">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-jamea-accent"></i>
+                <span>Synthesized Report</span>
+              </button>
+            </div>
+
+            <!-- Generate Report Button -->
+            <button id="btn-generate-ai" onclick="triggerGenerateReport()" class="px-3.5 py-1.5 bg-jamea hover:bg-jamea-light text-amber-200 text-xs font-bold rounded-lg flex items-center gap-1.5 transition shadow border border-amber-500/30">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+              <span>Generate AI Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB CONTENT AREA -->
+        <div class="flex-1 overflow-y-auto p-5">
+
+          <!-- TAB 1: EVALUATION INTAKE FORM -->
+          <div id="counsellor-tab-form" class="space-y-6">
+
+            <!-- General Info Section -->
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-3 flex items-center gap-1.5">
+                <i data-lucide="user" class="w-4 h-4 text-emerald-700"></i>
+                <span>1. General Information & Background</span>
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Student Full Name</label>
+                  <input id="form-name" type="text" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-emerald-600">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Age</label>
+                  <input id="form-age" type="number" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-emerald-600">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Hometown / Place</label>
+                  <input id="form-place" type="text" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-emerald-600">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Father's Occupation</label>
+                  <input id="form-father-occ" type="text" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-emerald-600">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Mother's Occupation</label>
+                  <input id="form-mother-occ" type="text" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-emerald-600">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Program Batch</label>
+                  <input id="form-batch" type="text" value="Batch 2026-A" class="w-full p-2 border border-slate-300 rounded-lg focus:ring-1 focus:ring-emerald-600">
+                </div>
+              </div>
+            </div>
+
+            <!-- Questionnaire Section (From Counsellor Sheet) -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200">
+              <div class="flex items-center justify-between mb-3">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-800 flex items-center gap-1.5">
+                  <i data-lucide="help-circle" class="w-4 h-4 text-emerald-700"></i>
+                  <span>2. Session Questionnaire (Raw Interaction Responses)</span>
+                </h3>
+                <span class="text-xs text-slate-400">All 21 Questions from Evaluation Sheet</span>
+              </div>
+
+              <div class="space-y-3 text-xs">
+
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Before we start, is there anything in your mind you want to ask / reason for session?</label>
+                  <input id="q-pre-session" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">According to you, for what people CAN rely on you? (What are you good at?)</label>
+                    <textarea id="q-strengths" rows="2" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600"></textarea>
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">According to you, for what people CAN NEVER rely on you?</label>
+                    <textarea id="q-weaknesses" rows="2" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600"></textarea>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">What do you worry or overthink most about?</label>
+                    <input id="q-worry" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">What are the 3 things you enjoy doing most?</label>
+                    <input id="q-enjoy" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">What makes you feel insecure or uncomfortable?</label>
+                    <input id="q-insecure" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">What is one thing you are proud of about yourself?</label>
+                    <input id="q-proud" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">And what makes you feel confident?</label>
+                    <input id="q-confident" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Do you feel people around you understand you?</label>
+                    <input id="q-understood" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Whom do you talk to (your go-to person) when something bothers you?</label>
+                    <input id="q-goto" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Is there anything you wish your parents did differently?</label>
+                    <input id="q-parents" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Do you study because you want to or because of pressure?</label>
+                    <input id="q-study" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Have you thought about future career options?</label>
+                    <input id="q-career" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">As an adult what life have you imagined?</label>
+                    <input id="q-adult-life" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Any fear / barrier related to your future, study, marks, career?</label>
+                    <input id="q-fears" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">One thing you want to alter / improve about yourself?</label>
+                    <input id="q-alter" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Magic button: if you press, what one thing you wish to change about your life?</label>
+                    <input id="q-magic" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">How this conversation felt for you?</label>
+                    <input id="q-felt" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Anything you wanted to share but couldn't?</label>
+                    <input id="q-unshared" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-medium text-slate-700 mb-1">Your takeaway?</label>
+                    <input id="q-takeaway" type="text" class="w-full p-2 border border-slate-200 rounded-lg bg-slate-50 focus:bg-white focus:ring-1 focus:ring-emerald-600">
+                  </div>
+                  <div class="bg-amber-50/60 p-2 rounded-lg border border-amber-200">
+                    <label class="block font-bold text-amber-900 mb-1 flex items-center gap-1">
+                      <i data-lucide="book-heart" class="w-3.5 h-3.5 text-amber-700"></i>
+                      <span>One thing that Moula says and you are practicing / trying to practice:</span>
+                    </label>
+                    <input id="q-moula" type="text" class="w-full p-1.5 border border-amber-300 rounded bg-white focus:ring-1 focus:ring-amber-500">
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Clinical Observations Rubric -->
+            <div class="bg-slate-50/70 p-4 rounded-xl border border-slate-200">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-emerald-800 mb-3 flex items-center gap-1.5">
+                <i data-lucide="eye" class="w-4 h-4 text-emerald-700"></i>
+                <span>3. Counsellor Clinical Observations (10 Dimensions)</span>
+              </h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Emotional Expression</label>
+                  <input id="obs-emotional" type="text" placeholder="e.g. Fully expressive" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Confidence Level</label>
+                  <input id="obs-confidence" type="text" placeholder="e.g. Confident" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Anxiety / Restlessness</label>
+                  <input id="obs-anxiety" type="text" placeholder="e.g. A little bit / High" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Clarity vs Confusion</label>
+                  <input id="obs-clarity" type="text" placeholder="e.g. Clear" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Family Pressure Themes</label>
+                  <input id="obs-pressure" type="text" placeholder="e.g. No / Yes" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Fear of Failure / Judgement</label>
+                  <input id="obs-fear" type="text" placeholder="e.g. Mild / Severe" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Motivational Level</label>
+                  <input id="obs-motivation" type="text" placeholder="e.g. High / Moderate" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Identity Struggles</label>
+                  <input id="obs-identity" type="text" placeholder="e.g. None Observed" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div>
+                  <label class="block font-medium text-slate-700 mb-1">Peer Influence</label>
+                  <input id="obs-peer" type="text" placeholder="e.g. Positive / Susceptible" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+                <div class="sm:col-span-2 md:col-span-1">
+                  <label class="block font-medium text-slate-700 mb-1">Emotional Maturity</label>
+                  <input id="obs-maturity" type="text" placeholder="e.g. Good / Developing" class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+                </div>
+              </div>
+            </div>
+
+            <!-- Remarks & Exercises -->
+            <div class="bg-white p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Counsellor Raw Remarks</label>
+                <textarea id="form-raw-remarks" rows="3" placeholder="e.g. seems all is good." class="w-full p-2 border border-slate-300 rounded-lg"></textarea>
+              </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Prescribed Exercises & Actionable Tasks</label>
+                <textarea id="form-raw-exercise" rows="3" placeholder="e.g. Solution-oriented cognitive reframing, screen-time log..." class="w-full p-2 border border-slate-300 rounded-lg"></textarea>
+              </div>
+            </div>
+
+            <!-- Save Form Changes -->
+            <div class="flex items-center justify-end gap-3 pt-2">
+              <button onclick="saveStudentFormData()" class="px-5 py-2 bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition shadow flex items-center gap-1.5">
+                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                <span>Save Intake Details</span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- TAB 2: SYNTHESIZED REPORT & INTERACTIVE EDITOR -->
+          <div id="counsellor-tab-report" class="hidden space-y-6">
+
+            <!-- Controls Banner: Confidentiality & Triage & Downloads -->
+            <div class="bg-amber-50/70 p-4 rounded-xl border border-amber-200 flex flex-wrap items-center justify-between gap-4">
+              
+              <!-- Confidentiality Shield Toggle -->
+              <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="lock" class="w-4 h-4 text-amber-700"></i>
+                  <span class="text-xs font-bold text-slate-800">Confidentiality Shield:</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input id="toggle-confidentiality" onchange="toggleStudentConfidentiality(this.checked)" type="checkbox" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-amber-700"></div>
+                </label>
+                <span id="confidentiality-status-label" class="text-xs font-semibold text-slate-600">Full Profile (Names Visible)</span>
+              </div>
+
+              <!-- Triage Status Selector -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-800">Triage Level:</span>
+                <select id="report-triage-select" onchange="updateTriageSelection(this.value)" class="text-xs font-bold p-1.5 rounded-lg border border-slate-300 bg-white">
+                  <option value="🟢 Well-Adapted">🟢 Well-Adapted</option>
+                  <option value="🟡 Mild Observation">🟡 Mild Observation</option>
+                  <option value="🔴 Requires Follow-up">🔴 Requires Follow-up</option>
+                </select>
+              </div>
+
+              <!-- Export Buttons -->
+              <div class="flex items-center gap-2">
+                <button onclick="downloadStudentDocx()" class="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow">
+                  <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+                  <span>Word (.docx)</span>
+                </button>
+                <button onclick="printStudentReport()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition shadow">
+                  <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                  <span>Print / PDF</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Editable Report Sections -->
+            <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+
+              <!-- Institutional Report Header for preview -->
+              <div class="text-center border-b border-slate-200 pb-4">
+                <h2 class="font-serif text-xl font-bold text-jamea tracking-wider">AL JAMEA TUS SAIFIYAH</h2>
+                <p class="text-xs font-semibold text-jamea-accent tracking-widest uppercase">Saire Ilmi Counselling & Psychological Evaluation</p>
+                <p id="report-display-candidate-header" class="text-xs text-slate-500 mt-1">Candidate: Abbas Juzer bhai Malek | Age: 16 | Batch: 2026-A</p>
+              </div>
+
+              <!-- Section 1: Executive Summary -->
+              <div>
+                <label class="block font-serif font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2 text-jamea">
+                  <span>1. Executive Summary & Program Adaptation</span>
+                </label>
+                <textarea id="rep-exec-summary" rows="3" class="w-full p-3 border border-slate-200 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 bg-slate-50/50"></textarea>
+              </div>
+
+              <!-- Section 2: Emotional Profile -->
+              <div>
+                <label class="block font-serif font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2 text-jamea">
+                  <span>2. Emotional Profile, Self-Concept & Coping Mechanisms</span>
+                </label>
+                <textarea id="rep-emotional-profile" rows="4" class="w-full p-3 border border-slate-200 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 bg-slate-50/50"></textarea>
+              </div>
+
+              <!-- Section 3: Social & Family Ecosystem -->
+              <div>
+                <label class="block font-serif font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2 text-jamea">
+                  <span>3. Social & Family Dynamics</span>
+                </label>
+                <textarea id="rep-social-dynamics" rows="3" class="w-full p-3 border border-slate-200 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 bg-slate-50/50"></textarea>
+              </div>
+
+              <!-- Section 4: Academic & Future Outlook -->
+              <div>
+                <label class="block font-serif font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2 text-jamea">
+                  <span>4. Academic Orientation & Future Aspirations</span>
+                </label>
+                <textarea id="rep-academic-future" rows="3" class="w-full p-3 border border-slate-200 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-emerald-600 focus:border-emerald-600 bg-slate-50/50"></textarea>
+              </div>
+
+              <!-- Section 5: Institutional & Spiritual Alignment -->
+              <div class="bg-amber-50/40 p-4 rounded-xl border border-amber-200">
+                <label class="block font-serif font-bold text-amber-900 text-sm mb-1.5 flex items-center gap-2">
+                  <i data-lucide="sparkles" class="w-4 h-4 text-amber-700"></i>
+                  <span>5. Institutional & Spiritual Value Alignment (Saire Ilmi Ethos)</span>
+                </label>
+                <p class="text-xs text-amber-800/80 mb-2">Evaluates assimilation of Moula's guidance (digital moderation, screen-time mindfulness, morning Namaaz habituation).</p>
+                <textarea id="rep-spiritual-alignment" rows="3" class="w-full p-3 border border-amber-300 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-amber-600 bg-white"></textarea>
+              </div>
+
+              <!-- Section 6: Counsellor Professional Remarks -->
+              <div class="bg-emerald-50/40 p-4 rounded-xl border border-emerald-200">
+                <label class="block font-serif font-bold text-emerald-900 text-sm mb-1.5 flex items-center gap-2">
+                  <i data-lucide="user-check" class="w-4 h-4 text-emerald-700"></i>
+                  <span>6. Counsellor's Professional Remarks & Clinical Judgement</span>
+                </label>
+                <textarea id="rep-counsellor-remarks" rows="3" class="w-full p-3 border border-emerald-300 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-emerald-600 bg-white font-medium"></textarea>
+              </div>
+
+              <!-- Section 7: Prescribed Exercises -->
+              <div>
+                <label class="block font-serif font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2 text-jamea">
+                  <span>7. Prescribed Exercises & Recommended Routines</span>
+                </label>
+                <textarea id="rep-prescribed-exercises" rows="3" class="w-full p-3 border border-slate-200 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-emerald-600 bg-slate-50/50"></textarea>
+              </div>
+
+              <!-- Section 8: Follow-up & Pastoral Plan -->
+              <div class="border-t border-slate-200 pt-4">
+                <label class="block font-serif font-bold text-slate-900 text-sm mb-1.5 flex items-center gap-2 text-red-800">
+                  <i data-lucide="calendar-clock" class="w-4 h-4 text-red-600"></i>
+                  <span>8. Pastoral / Follow-up Action Plan for Management</span>
+                </label>
+                <textarea id="rep-followup-notes" rows="2" placeholder="Detail any recommendation for second session or mentor check-in..." class="w-full p-3 border border-slate-200 rounded-lg text-xs leading-relaxed focus:ring-1 focus:ring-red-600 bg-slate-50/50"></textarea>
+              </div>
+
+              <!-- Save Changes Button -->
+              <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                <button onclick="saveEditedReport()" class="px-5 py-2 bg-emerald-800 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition shadow flex items-center gap-1.5">
+                  <i data-lucide="check-circle" class="w-3.5 h-3.5"></i>
+                  <span>Save Report Changes</span>
+                </button>
+              </div>
+
+            </div>
+
+            <!-- COLLABORATION & DISCUSSION THREAD -->
+            <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+              <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                  <i data-lucide="messages-square" class="w-4 h-4 text-emerald-700"></i>
+                  <h3 class="font-serif font-bold text-slate-900 text-sm">Supervisor & Counsellor Collaboration Thread</h3>
+                </div>
+                <span class="text-xs text-slate-400">Direct notes between Management and Counsellor</span>
+              </div>
+
+              <!-- Comment List -->
+              <div id="comments-container" class="space-y-3 mb-4">
+                <!-- Dynamically populated -->
+              </div>
+
+              <!-- Add Comment Input -->
+              <div class="flex items-center gap-2 text-xs">
+                <input id="input-new-comment" type="text" placeholder="Write a note to program management or counsellor..." 
+                       class="flex-1 p-2.5 border border-slate-200 rounded-lg focus:ring-1 focus:ring-emerald-600 focus:outline-none">
+                <button onclick="postComment()" class="px-4 py-2.5 bg-jamea hover:bg-jamea-light text-white font-semibold rounded-lg transition shadow flex items-center gap-1">
+                  <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                  <span>Send</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- VIEW 2: MANAGEMENT PORTAL                  -->
+    <!-- ========================================== -->
+    <div id="view-management" class="hidden flex-1 space-y-6">
+
+      <!-- Executive Metric Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Counselled</p>
+            <h3 id="mgmt-stat-total" class="font-serif text-2xl font-bold text-slate-900 mt-1">3</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Saire Ilmi Boys (13–16)</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+            <i data-lucide="users" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-emerald-700 uppercase tracking-wider">Well-Adapted (Thriving)</p>
+            <h3 id="mgmt-stat-green" class="font-serif text-2xl font-bold text-emerald-800 mt-1">2</h3>
+            <p class="text-xs text-emerald-600 mt-0.5">Routine wrap-up</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+            <i data-lucide="smile" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-amber-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-amber-700 uppercase tracking-wider">Mild Observation</p>
+            <h3 id="mgmt-stat-amber" class="font-serif text-2xl font-bold text-amber-800 mt-1">1</h3>
+            <p class="text-xs text-amber-600 mt-0.5">Hall mentor guidance</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600">
+            <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-red-100 shadow-sm flex items-center justify-between">
+          <div>
+            <p class="text-xs font-semibold text-red-700 uppercase tracking-wider">Action / 2nd Session</p>
+            <h3 id="mgmt-stat-red" class="font-serif text-2xl font-bold text-red-800 mt-1">1</h3>
+            <p class="text-xs text-red-600 mt-0.5">Requires immediate check-in</p>
+          </div>
+          <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+            <i data-lucide="alert-octagon" class="w-6 h-6"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Management Filter & Action Bar -->
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        
+        <!-- Filter Tabs -->
+        <div class="flex items-center gap-1.5 text-xs font-semibold">
+          <span class="text-slate-400 mr-2">Filter Roster:</span>
+          <button id="filter-all-btn" onclick="filterManagementRoster('all')" class="px-3 py-1.5 rounded-lg bg-jamea text-white shadow-sm">All Candidates</button>
+          <button id="filter-red-btn" onclick="filterManagementRoster('red')" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200">🔴 Requires Follow-up</button>
+          <button id="filter-amber-btn" onclick="filterManagementRoster('amber')" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200">🟡 Mild Observation</button>
+          <button id="filter-green-btn" onclick="filterManagementRoster('green')" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200">🟢 Well-Adapted</button>
+        </div>
+
+        <!-- Conclusive Report Trigger -->
+        <button onclick="openCumulativeModal()" class="px-4 py-2 bg-emerald-800 hover:bg-emerald-700 text-amber-200 font-bold text-xs rounded-lg transition shadow flex items-center gap-2 border border-emerald-600">
+          <i data-lucide="sparkles" class="w-4 h-4 text-amber-300"></i>
+          <span>View Cumulative Cohort Overview</span>
+        </button>
+
+      </div>
+
+      <!-- Management Table of Candidates -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <table class="w-full text-left text-xs divide-y divide-slate-200">
+          <thead class="bg-slate-50 text-slate-600 font-semibold uppercase tracking-wider">
+            <tr>
+              <th class="p-3.5">Candidate Name</th>
+              <th class="p-3.5">Age & Origin</th>
+              <th class="p-3.5">Triage Status</th>
+              <th class="p-3.5">Key Concern / Focus</th>
+              <th class="p-3.5">Moula's Guidance Practice</th>
+              <th class="p-3.5 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mgmt-table-body" class="divide-y divide-slate-100">
+            <!-- Dynamically populated via JS -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ==================================================== -->
+  <!-- MODAL: CUMULATIVE COHORT CONCLUSIVE REPORT          -->
+  <!-- ==================================================== -->
+  <div id="cumulative-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="bg-jamea text-white p-5 border-b-2 border-jamea-accent flex items-center justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs px-2 py-0.5 rounded bg-amber-400/20 text-amber-300 font-bold">EXECUTIVE DOSSIER</span>
+            <span class="text-xs text-slate-300">Al Jamea tus Saifiyah</span>
+          </div>
+          <h2 class="font-serif text-lg sm:text-xl font-bold text-amber-100 mt-1">Saire Ilmi Program — Cumulative Conclusive Cohort Dossier</h2>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="downloadCumulativeDocx()" class="px-3 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="file-down" class="w-3.5 h-3.5"></i>
+            <span>Word (.docx)</span>
+          </button>
+          <button onclick="printCumulativeReport()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-900 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition">
+            <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+            <span>Print / PDF</span>
+          </button>
+          <button onclick="closeCumulativeModal()" class="p-1.5 text-slate-300 hover:text-white rounded-lg">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 overflow-y-auto space-y-6 text-xs leading-relaxed" id="cumulative-modal-content">
+        <!-- Rendered dynamically via JS -->
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between text-xs text-slate-500">
+        <span>Confidential Pastoral Document for Leadership of Saire Ilmi</span>
+        <button onclick="closeCumulativeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 font-semibold rounded-lg text-slate-700">Close</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- MODAL: API KEY SETTINGS                              -->
+  <!-- ==================================================== -->
+  <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between mb-4 border-b pb-3">
+        <h3 class="font-serif font-bold text-slate-900 text-base flex items-center gap-2">
+          <i data-lucide="key" class="w-4 h-4 text-emerald-700"></i>
+          <span>Gemini AI Engine Configuration</span>
+        </h3>
+        <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600">
+          <i data-lucide="x" class="w-4 h-4"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-600 mb-3 leading-relaxed">
+        The app includes an intelligent embedded adolescent psychology synthesis engine that works immediately. You can also provide a <b>Gemini API Key</b> to enable live Gemini 2.5 Flash synthesis.
+      </p>
+
+      <div class="mb-4">
+        <label class="block font-semibold text-xs text-slate-700 mb-1">Google Gemini API Key</label>
+        <input id="input-api-key" type="password" placeholder="AIzaSy..." class="w-full p-2.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-emerald-600">
+      </div>
+
+      <div class="flex items-center justify-end gap-2 text-xs">
+        <button onclick="closeSettingsModal()" class="px-3 py-1.5 text-slate-600 hover:text-slate-800">Cancel</button>
+        <button onclick="saveApiKey()" class="px-4 py-1.5 bg-jamea text-white font-semibold rounded-lg hover:bg-jamea-light shadow">Save Key</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PRINT CONTAINER (VISIBLE ONLY IN BROWSER PRINT DIALOG) -->
+  <div id="printable-dossier" class="hidden"></div>
+
+  <!-- APP SCRIPT -->
+  <script src="/static/app.js"></script>
+</body>
+</html>
+

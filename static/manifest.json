@@ -1,0 +1,25 @@
+{
+  "name": "Saire Ilmi Counselling Hub",
+  "short_name": "Saire Ilmi",
+  "description": "Student Counselling & Psychological Evaluation System for Al Jamea tus Saifiyah",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#143829",
+  "theme_color": "#143829",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
+
