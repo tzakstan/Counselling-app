@@ -13,7 +13,9 @@ from data_store import (
     get_student_by_id,
     save_or_update_student,
     delete_student,
-    get_or_create_cumulative_report
+    get_or_create_cumulative_report,
+    check_db_health,
+    set_runtime_database_url
 )
 from gemini_service import (
     generate_individual_report,
@@ -202,9 +204,25 @@ def update_api_key(payload: ApiKeyPayload):
     set_api_key(payload.api_key)
     return {"status": "success", "has_key": bool(get_api_key())}
 
-@app.get("/api/settings/api-key")
-def check_api_key():
-    return {"has_key": bool(get_api_key())}
+@app.get("/api/system/status")
+def get_system_status():
+    db_health = check_db_health()
+    return {
+        "database": db_health,
+        "ai_engine": {
+            "has_key": bool(get_api_key()),
+            "type": "Gemini 2.5 Flash" if get_api_key() else "Built-in Expert Engine"
+        }
+    }
+
+class DatabaseUrlPayload(BaseModel):
+    database_url: str
+
+@app.post("/api/settings/database-url")
+def update_database_url(payload: DatabaseUrlPayload):
+    set_runtime_database_url(payload.database_url)
+    health = check_db_health()
+    return health
 
 if __name__ == "__main__":
     import uvicorn

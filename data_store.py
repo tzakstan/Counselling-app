@@ -1,25 +1,51 @@
 import os
 import json
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from models import Student, QuestionnaireData, ClinicalObservations, Comment, GeneratedReport, CumulativeReport
 from gemini_service import generate_individual_report, generate_cumulative_report
 
 logger = logging.getLogger(__name__)
 
-DATABASE_URL = os.getenv("DATABASE_URL")
 DB_FILE = os.path.join(os.path.dirname(__file__), "students_db.json")
 CUMULATIVE_FILE = os.path.join(os.path.dirname(__file__), "cumulative_db.json")
 
+# Runtime override for database URL if updated in settings
+RUNTIME_DATABASE_URL: Optional[str] = None
+
+LAST_DB_ERROR: Optional[str] = None
+
+def get_database_url() -> Optional[str]:
+    return (
+        RUNTIME_DATABASE_URL
+        or os.getenv("DATABASE_URL")
+        or os.getenv("POSTGRES_URL")
+        or os.getenv("POSTGRESQL_URL")
+        or os.getenv("RENDER_DATABASE_URL")
+        or os.getenv("DB_URL")
+    )
+
+def set_runtime_database_url(url: str):
+    global RUNTIME_DATABASE_URL
+    RUNTIME_DATABASE_URL = url.strip() if url and url.strip() else None
+
 def _get_pg_conn():
-    if not DATABASE_URL:
+    global LAST_DB_ERROR
+    db_url = get_database_url()
+    if not db_url:
+        LAST_DB_ERROR = "DATABASE_URL environment variable is not configured."
         return None
+
+    url = db_url.strip()
+    if url.startswith("postgres://"):
+        url = url.replace("postgres://", "postgresql://", 1)
+
+    last_err = ""
+
+    # Strategy 1: psycopg2 directly
     try:
-        url = DATABASE_URL.strip()
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql://", 1)
         import psycopg2
-        conn = psycopg2.connect(url)
+        conn = psycopg2.connect(url, connect_timeout=8)
         with conn.cursor() as cur:
             cur.execute("""
                 CREATE TABLE IF NOT EXISTS app_storage (
@@ -28,10 +54,113 @@ def _get_pg_conn():
                 );
             """)
         conn.commit()
+        LAST_DB_ERROR = None
         return conn
+    except Exception as e1:
+        last_err = str(e1).strip()
+        logger.warning(f"psycopg2 direct connection attempt: {last_err}")
+
+    # Strategy 2: If SSL missing on cloud database, retry with sslmode=require
+    if "ssl" not in url.lower() and not ("localhost" in url or "127.0.0.1" in url):
+        try:
+            import psycopg2
+            separator = "&" if "?" in url else "?"
+            ssl_url = f"{url}{separator}sslmode=require"
+            conn = psycopg2.connect(ssl_url, connect_timeout=8)
+            with conn.cursor() as cur:
+                cur.execute("""
+                    CREATE TABLE IF NOT EXISTS app_storage (
+                        key VARCHAR(64) PRIMARY KEY,
+                        content TEXT NOT NULL
+                    );
+                """)
+            conn.commit()
+            LAST_DB_ERROR = None
+            return conn
+        except Exception as e2:
+            last_err = str(e2).strip()
+            logger.warning(f"psycopg2 with sslmode attempt: {last_err}")
+
+    # Strategy 3: Pure-Python pg8000 fallback
+    try:
+        import pg8000.dbapi, urllib.parse, ssl
+        parsed = urllib.parse.urlparse(url)
+        ssl_ctx = None
+        if "ssl" in url.lower() or not ("localhost" in url or "127.0.0.1" in url):
+            ssl_ctx = ssl.create_default_context()
+            ssl_ctx.check_hostname = False
+            ssl_ctx.verify_mode = ssl.CERT_NONE
+
+        conn = pg8000.dbapi.connect(
+            user=urllib.parse.unquote(parsed.username or ""),
+            password=urllib.parse.unquote(parsed.password or ""),
+            host=parsed.hostname or "localhost",
+            port=parsed.port or 5432,
+            database=parsed.path.lstrip("/"),
+            ssl_context=ssl_ctx,
+            timeout=8
+        )
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS app_storage (
+                    key VARCHAR(64) PRIMARY KEY,
+                    content TEXT NOT NULL
+                );
+            """)
+        conn.commit()
+        LAST_DB_ERROR = None
+        return conn
+    except Exception as e3:
+        last_err = str(e3).strip()
+        logger.error(f"pg8000 fallback attempt: {last_err}")
+
+    LAST_DB_ERROR = last_err
+    return None
+
+def check_db_health() -> Dict[str, Any]:
+    db_url = get_database_url()
+    if not db_url:
+        return {
+            "connected": False,
+            "mode": "local_ephemeral",
+            "type": "Temporary Local File (Ephemeral)",
+            "message": "DATABASE_URL is not configured in Render. Data is being saved to the local temporary container disk and will reset whenever Render restarts.",
+            "url_configured": False
+        }
+    try:
+        conn = _get_pg_conn()
+        if not conn:
+            safe_url = db_url.split("@")[-1] if "@" in db_url else "database"
+            err_detail = LAST_DB_ERROR or "Unable to establish connection."
+            return {
+                "connected": False,
+                "mode": "error",
+                "type": "PostgreSQL (Connection Failed)",
+                "message": f"Connection failed to '{safe_url}'. Detail: {err_detail}",
+                "url_configured": True,
+                "error_detail": err_detail
+            }
+        with conn.cursor() as cur:
+            cur.execute("SELECT count(*) FROM app_storage;")
+            count = cur.fetchone()[0]
+        conn.close()
+        return {
+            "connected": True,
+            "mode": "postgres_cloud",
+            "type": "Cloud PostgreSQL (Permanent Storage)",
+            "message": "Connected successfully! All student records, edits, and deletions are permanently stored in the cloud.",
+            "url_configured": True,
+            "items_count": count
+        }
     except Exception as e:
-        logger.error(f"PostgreSQL connection error: {e}")
-        return None
+        return {
+            "connected": False,
+            "mode": "error",
+            "type": "PostgreSQL (Error)",
+            "message": f"Database error: {str(e)}",
+            "url_configured": True,
+            "error_detail": str(e)
+        }
 
 def _init_seed_data() -> List[Student]:
     s1 = Student(
@@ -170,7 +299,6 @@ def load_students() -> List[Student]:
                     data = json.loads(row[0])
                     return [Student(**item) for item in data]
                 else:
-                    # Initialize in Postgres once
                     seeds = _init_seed_data()
                     save_students(seeds)
                     return seeds
@@ -211,8 +339,11 @@ def save_students(students: List[Student]):
             conn.close()
 
     # Also save locally
-    with open(DB_FILE, "w", encoding="utf-8") as f:
-        f.write(data_json)
+    try:
+        with open(DB_FILE, "w", encoding="utf-8") as f:
+            f.write(data_json)
+    except Exception as e:
+        logger.error(f"Error writing to local DB_FILE: {e}")
 
 
 def get_student_by_id(student_id: str) -> Optional[Student]:
@@ -267,6 +398,9 @@ def get_or_create_cumulative_report() -> CumulativeReport:
         finally:
             conn.close()
 
-    with open(CUMULATIVE_FILE, "w", encoding="utf-8") as f:
-        f.write(data_json)
+    try:
+        with open(CUMULATIVE_FILE, "w", encoding="utf-8") as f:
+            f.write(data_json)
+    except Exception:
+        pass
     return rep

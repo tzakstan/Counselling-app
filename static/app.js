@@ -213,22 +213,53 @@ async function fetchStudents() {
   }
 }
 
-async function checkApiKeyStatus() {
+let systemStatus = null;
+
+async function checkSystemStatus() {
   try {
-    const res = await fetch('/api/settings/api-key');
+    const res = await fetch('/api/system/status');
     const data = await res.json();
-    const ind = document.getElementById('ai-status-indicator');
-    if (data.has_key) {
-      ind.innerHTML = `<i data-lucide="sparkles" class="w-3 h-3 text-amber-500"></i> Gemini 2.5 Active`;
-      ind.className = "text-amber-800 font-semibold flex items-center gap-1";
-    } else {
-      ind.innerHTML = `<i data-lucide="cpu" class="w-3 h-3 text-emerald-600"></i> Expert Clinical Engine`;
-      ind.className = "text-emerald-700 font-medium flex items-center gap-1";
+    systemStatus = data;
+
+    // 1. Update AI Status
+    const aiInd = document.getElementById('ai-status-indicator');
+    if (aiInd) {
+      if (data.ai_engine?.has_key) {
+        aiInd.innerHTML = `<i data-lucide="sparkles" class="w-3 h-3 text-amber-500"></i> Gemini 2.5 Active`;
+        aiInd.className = "text-amber-800 font-semibold flex items-center gap-1";
+      } else {
+        aiInd.innerHTML = `<i data-lucide="cpu" class="w-3 h-3 text-emerald-600"></i> Expert Clinical Engine`;
+        aiInd.className = "text-emerald-700 font-medium flex items-center gap-1";
+      }
     }
+
+    // 2. Update Database Status Indicator
+    const dbInd = document.getElementById('db-status-indicator');
+    if (dbInd && data.database) {
+      const db = data.database;
+      if (db.connected) {
+        dbInd.innerHTML = `<i data-lucide="check-circle" class="w-3 h-3 text-emerald-600"></i> <span>Cloud DB: Connected</span>`;
+        dbInd.className = "cursor-pointer font-semibold flex items-center gap-1 text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 hover:bg-emerald-100 transition";
+        dbInd.title = db.message;
+      } else if (db.mode === 'error') {
+        dbInd.innerHTML = `<i data-lucide="alert-circle" class="w-3 h-3 text-red-600"></i> <span>DB Error (Click to fix)</span>`;
+        dbInd.className = "cursor-pointer font-bold flex items-center gap-1 text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 hover:bg-red-100 transition animate-pulse";
+        dbInd.title = db.message;
+      } else {
+        dbInd.innerHTML = `<i data-lucide="alert-triangle" class="w-3 h-3 text-amber-600"></i> <span>Local Mode (Temporary)</span>`;
+        dbInd.className = "cursor-pointer font-semibold flex items-center gap-1 text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 hover:bg-amber-100 transition";
+        dbInd.title = "DATABASE_URL is not configured. Data will reset on Render restarts. Click to connect cloud database.";
+      }
+    }
+
     refreshIcons();
   } catch (e) {
-    console.warn(e);
+    console.warn("System status check failed:", e);
   }
+}
+
+async function checkApiKeyStatus() {
+  await checkSystemStatus();
 }
 
 // ----------------------------------------------------
@@ -1300,7 +1331,7 @@ async function createNewStudent() {
 // ----------------------------------------------------
 // Settings & Account Credential Management
 // ----------------------------------------------------
-function openSettingsModal() {
+async function openSettingsModal() {
   const modal = document.getElementById('settings-modal');
   if (!modal) return;
   modal.classList.remove('hidden');
@@ -1309,6 +1340,104 @@ function openSettingsModal() {
     document.getElementById('setting-display-name').value = state.currentUser.name || '';
     document.getElementById('setting-username').value = state.currentUser.username || '';
     document.getElementById('setting-password').value = '';
+  }
+
+  // Update DB information in Settings
+  await checkSystemStatus();
+  renderDbSettingsInfo();
+}
+
+function renderDbSettingsInfo() {
+  const badge = document.getElementById('setting-db-badge');
+  const infoBox = document.getElementById('setting-db-info-box');
+  if (!badge || !infoBox) return;
+
+  const db = systemStatus?.database;
+  if (!db) {
+    badge.innerText = "Unknown";
+    badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-slate-200 text-slate-700";
+    infoBox.innerHTML = `<p class="text-slate-500">Checking database status...</p>`;
+    return;
+  }
+
+  if (db.connected) {
+    badge.innerText = "🟢 Connected (Cloud)";
+    badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300";
+    infoBox.innerHTML = `
+      <div class="flex items-center gap-1.5 font-bold text-emerald-900 mb-1">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-emerald-600"></i>
+        <span>Cloud Database Connected: ${db.type}</span>
+      </div>
+      <p class="text-slate-600 mb-1">${db.message}</p>
+      <p class="text-[11px] text-emerald-700 font-medium">All student session records, edits, and deletions are permanently saved in the cloud and will survive server restarts.</p>
+    `;
+  } else if (db.mode === 'error') {
+    badge.innerText = "🔴 Connection Failed";
+    badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-red-800 border border-red-300";
+    infoBox.innerHTML = `
+      <div class="flex items-center gap-1.5 font-bold text-red-900 mb-1">
+        <i data-lucide="alert-octagon" class="w-4 h-4 text-red-600"></i>
+        <span>Database Error</span>
+      </div>
+      <p class="text-red-700 font-mono text-[11px] mb-2 bg-red-50 p-2 rounded border border-red-200">${db.message}</p>
+      <p class="text-slate-600">Please re-check your PostgreSQL connection URL below, or ensure your database credentials in Render are correct.</p>
+    `;
+  } else {
+    badge.innerText = "🟡 Local (Temporary)";
+    badge.className = "px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 text-amber-800 border border-amber-300";
+    infoBox.innerHTML = `
+      <div class="flex items-center gap-1.5 font-bold text-amber-900 mb-1">
+        <i data-lucide="alert-triangle" class="w-4 h-4 text-amber-600"></i>
+        <span>Temporary Local Storage Active</span>
+      </div>
+      <p class="text-slate-700 mb-2 leading-relaxed">
+        <b>Why changes reset:</b> Render's free tier runs inside an ephemeral container. Whenever Render sleeps (after 15 min of inactivity) or restarts, files written to disk are reset to the initial GitHub files.
+      </p>
+      <div class="p-2 bg-amber-50 rounded border border-amber-200 text-amber-950 font-medium">
+        <b>How to make it permanent (1-click):</b> Create a free PostgreSQL database on Render or Neon.tech, copy the connection string, and set it as <code class="bg-white px-1 rounded border border-amber-300">DATABASE_URL</code> in Render's Environment settings or paste it below.
+      </div>
+    `;
+  }
+  refreshIcons();
+}
+
+async function testAndSaveDatabaseUrl() {
+  const input = document.getElementById('input-database-url');
+  const url = input.value.trim();
+  if (!url) {
+    alert("Please enter a PostgreSQL connection URL (e.g. postgresql://user:pass@host/dbname?sslmode=require).");
+    return;
+  }
+
+  const btn = document.getElementById('btn-test-db');
+  btn.disabled = true;
+  btn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Testing Connection...</span>`;
+  refreshIcons();
+
+  try {
+    const res = await fetch('/api/settings/database-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ database_url: url })
+    });
+    const health = await res.json();
+    if (health.connected) {
+      showToast("Connected to Cloud Database! Reloading roster...");
+      await checkSystemStatus();
+      renderDbSettingsInfo();
+      await fetchStudents();
+      input.value = '';
+    } else {
+      alert("Database Connection Failed:\n\n" + health.message + "\n\nPlease verify the connection string, username, and password.");
+      await checkSystemStatus();
+      renderDbSettingsInfo();
+    }
+  } catch (err) {
+    alert("Error testing connection: " + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<i data-lucide="plug-zap" class="w-3.5 h-3.5"></i><span>Test & Connect</span>`;
+    refreshIcons();
   }
 }
 

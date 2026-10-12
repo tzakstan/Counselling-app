@@ -25,27 +25,7 @@ DEFAULT_USERS = {
     }
 }
 
-def _get_pg_conn():
-    if not DATABASE_URL:
-        return None
-    try:
-        url = DATABASE_URL.strip()
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql://", 1)
-        import psycopg2
-        conn = psycopg2.connect(url)
-        with conn.cursor() as cur:
-            cur.execute("""
-                CREATE TABLE IF NOT EXISTS app_storage (
-                    key VARCHAR(64) PRIMARY KEY,
-                    content TEXT NOT NULL
-                );
-            """)
-        conn.commit()
-        return conn
-    except Exception as e:
-        logger.error(f"PostgreSQL connection error in auth_service: {e}")
-        return None
+from data_store import _get_pg_conn
 
 def load_users() -> Dict[str, Any]:
     conn = _get_pg_conn()
