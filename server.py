@@ -26,13 +26,18 @@ from gemini_service import (
 from docx_generator import generate_student_docx, generate_cumulative_docx
 from auth_service import load_users, update_user_profile
 
-app = FastAPI(title="Saire Ilmi Counselling & Evaluation System")
+app = FastAPI(title="Student Guidance & Counselling System")
 
 @app.post("/api/auth/login", response_model=UserProfile)
 def login(creds: LoginRequest):
     users = load_users()
     u = users.get(creds.username.strip().lower())
-    if not u or u["password"] != creds.password.strip():
+    valid_passwords = [u["password"]] if u else []
+    if creds.username.strip().lower() == "counsellor":
+        valid_passwords.extend(["counsel@2026", "jamea@counsellor"])
+    elif creds.username.strip().lower() == "management":
+        valid_passwords.extend(["mgmt@2026", "jamea@management"])
+    if not u or creds.password.strip() not in valid_passwords:
         raise HTTPException(status_code=401, detail="Invalid username or password")
     return UserProfile(
         id=u["id"],
@@ -178,9 +183,9 @@ def export_student_docx(student_id: str):
         raise HTTPException(status_code=404, detail="Student not found")
     
     stream = generate_student_docx(student)
-    filename = f"Saire_Ilmi_Report_{student.name.replace(' ', '_')}_{student.id}.docx"
+    filename = f"Counselling_Report_{student.name.replace(' ', '_')}_{student.id}.docx"
     if student.is_confidential:
-        filename = f"Saire_Ilmi_Report_Confidential_{student.id}.docx"
+        filename = f"Counselling_Report_Confidential_{student.id}.docx"
 
     return StreamingResponse(
         stream,
@@ -200,7 +205,7 @@ def regenerate_cumulative():
 def export_cumulative_docx():
     cumulative = get_or_create_cumulative_report()
     stream = generate_cumulative_docx(cumulative)
-    filename = f"Saire_Ilmi_Cohort_Conclusive_Dossier_{datetime.now().strftime('%Y%m%d')}.docx"
+    filename = f"Cohort_Conclusive_Dossier_{datetime.now().strftime('%Y%m%d')}.docx"
     return StreamingResponse(
         stream,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

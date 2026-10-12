@@ -1,4 +1,4 @@
-// Saire Ilmi Counselling & Evaluation System - Frontend Logic
+// Student Guidance & Counselling System - Frontend Logic
 
 let state = {
   currentUser: null, // { id, username, name, role: 'counsellor' | 'management' }
@@ -14,7 +14,7 @@ let deferredPrompt = null;
 // Initialize Application
 document.addEventListener('DOMContentLoaded', async () => {
   // Check stored user session
-  const storedUser = localStorage.getItem('saire_ilmi_user');
+  const storedUser = localStorage.getItem('counselling_hub_user') || localStorage.getItem('saire_ilmi_user');
   if (storedUser) {
     try {
       state.currentUser = JSON.parse(storedUser);
@@ -86,7 +86,8 @@ async function handleLoginSubmit(e) {
     if (!res.ok) throw new Error('Invalid credentials');
     const user = await res.json();
     state.currentUser = user;
-    localStorage.setItem('saire_ilmi_user', JSON.stringify(user));
+    localStorage.setItem('counselling_hub_user', JSON.stringify(user));
+    localStorage.removeItem('saire_ilmi_user');
 
     applyUserRole(user);
     hideLoginModal();
@@ -101,6 +102,7 @@ async function handleLoginSubmit(e) {
 
 function logout() {
   state.currentUser = null;
+  localStorage.removeItem('counselling_hub_user');
   localStorage.removeItem('saire_ilmi_user');
   showLoginModal();
 }
@@ -840,13 +842,13 @@ function openManagementPreviewModal(studentId) {
 
     </div>
 
-    <!-- Spiritual Assimilation & Moula's Guidance Banner -->
+    <!-- Spiritual Assimilation & Moral Guidance Banner -->
     <div class="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-300/80 rounded-xl">
       <h4 class="font-bold text-amber-950 text-xs flex items-center gap-1.5 mb-1">
         <i data-lucide="book-heart" class="w-3.5 h-3.5 text-amber-700"></i>
-        <span>Moula's Guidance In Practice (Saire Ilmi Focus):</span>
+        <span>Personal & Moral Guidance In Practice:</span>
       </h4>
-      <p class="text-amber-900 text-xs font-semibold">"${q.moula_guidance_practice || 'Curtailed phone screen time and morning Namaaz habituation'}"</p>
+      <p class="text-amber-900 text-xs font-semibold">"${q.moula_guidance_practice || 'Curtailed phone screen time and morning prayer habituation'}"</p>
     </div>
 
     <!-- Quick Clinical Observation Matrix (Radar Scorecard) -->
@@ -1027,7 +1029,7 @@ async function openCumulativeModal() {
 
       <!-- Management Recommendations -->
       <div class="bg-emerald-50/40 p-4 rounded-xl border border-emerald-200">
-        <h3 class="font-serif font-bold text-emerald-900 text-sm mb-2">5. Strategic Recommendations for Saire Ilmi Organizers</h3>
+        <h3 class="font-serif font-bold text-emerald-900 text-sm mb-2">5. Strategic Recommendations for Program Mentors</h3>
         <ul class="space-y-1 text-xs text-slate-700 list-disc list-inside">
           ${data.management_recommendations.map(r => `<li>${r}</li>`).join('')}
         </ul>
@@ -1071,7 +1073,7 @@ function printStudentReport() {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Saire Ilmi Report - ${dispName}</title>
+      <title>Counselling Evaluation Report - ${dispName}</title>
       <style>
         body { font-family: 'Georgia', serif; color: #1e293b; padding: 25px; line-height: 1.6; }
         .header { text-align: center; border-bottom: 2px solid #b48e3c; padding-bottom: 15px; margin-bottom: 20px; }
@@ -1093,10 +1095,10 @@ function printStudentReport() {
     </head>
     <body>
       <div class="header">
-        <img src="/static/logo.png" alt="Saire Ilmi Logo" style="width: 80px; height: auto; margin-bottom: 8px;">
-        <h1>AL JAMEA TUS SAIFIYAH</h1>
-        <h3>Saire Ilmi Program — Student Counselling & Psychological Evaluation</h3>
-        <p>Official Pastoral Record • Academic Year 1448H</p>
+        <img src="/static/logo.png" alt="Counselling Hub Logo" style="width: 80px; height: auto; margin-bottom: 8px;">
+        <h1>STUDENT COUNSELLING & GUIDANCE</h1>
+        <h3>Adolescent Development & Psychological Evaluation Report</h3>
+        <p>Official Guidance Record • Academic Year 1448H</p>
       </div>
 
       <table>
@@ -1126,7 +1128,7 @@ function printStudentReport() {
       <h4>4. Academic Orientation & Future Aspirations</h4>
       <p>${student.report.academic_future_outlook}</p>
 
-      <h4>5. Institutional & Spiritual Value Alignment (Saire Ilmi Ethos)</h4>
+      <h4>5. Values & Character Development Alignment</h4>
       <p>${student.report.institutional_value_alignment}</p>
 
       <h4>6. Counsellor's Professional Remarks & Clinical Judgement</h4>
@@ -1147,7 +1149,7 @@ function printStudentReport() {
         </div>
         <div style="text-align: right;">
           <p>_____________________________________</p>
-          <p>Lead Counsellor & Pastoral Evaluator<br>Al Jamea tus Saifiyah</p>
+          <p>Lead Counsellor & Pastoral Evaluator<br>Adolescent Guidance Department</p>
         </div>
       </div>
     </body>
@@ -1172,7 +1174,7 @@ function printCumulativeReport() {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>Saire Ilmi - Cumulative Cohort Dossier</title>
+      <title>Cohort Conclusive Guidance Dossier</title>
       <style>
         body { font-family: 'Georgia', serif; color: #1e293b; padding: 25px; line-height: 1.6; }
         .header { text-align: center; border-bottom: 2px solid #b48e3c; padding-bottom: 15px; margin-bottom: 20px; }
@@ -1192,16 +1194,16 @@ function printCumulativeReport() {
     </head>
     <body>
       <div class="header">
-        <img src="/static/logo.png" alt="Saire Ilmi Logo" style="width: 85px; height: auto; margin-bottom: 8px;">
-        <h1>AL JAMEA TUS SAIFIYAH</h1>
-        <h3>Saire Ilmi Program — Cumulative Conclusive Cohort Dossier</h3>
+        <img src="/static/logo.png" alt="Counselling Hub Logo" style="width: 85px; height: auto; margin-bottom: 8px;">
+        <h1>STUDENT COUNSELLING & GUIDANCE</h1>
+        <h3>Adolescent Cohort Evaluation & Conclusive Guidance Dossier</h3>
         <p>Generated: ${d.generated_at} | Total Candidates Counselled: ${d.total_evaluated}</p>
       </div>
 
       <h4>1. Executive Pastoral Overview</h4>
       <p>${d.executive_overview}</p>
 
-      <h4>2. Spiritual Assimilation & Moula's Guidance</h4>
+      <h4>2. Values & Character Development Assimilation</h4>
       <p>${d.spiritual_value_integration_summary}</p>
 
       ${d.action_roster_high_risk && d.action_roster_high_risk.length > 0 ? `
@@ -1638,7 +1640,8 @@ async function saveAccountSettings() {
     if (!res.ok) throw new Error('Failed to update credentials');
     const updated = await res.json();
     state.currentUser = updated;
-    localStorage.setItem('saire_ilmi_user', JSON.stringify(updated));
+    localStorage.setItem('counselling_hub_user', JSON.stringify(updated));
+    localStorage.removeItem('saire_ilmi_user');
     applyUserRole(updated);
     closeSettingsModal();
     showToast("Account credentials updated successfully!");
@@ -1655,7 +1658,7 @@ async function exportAllDataJson() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Saire_Ilmi_Database_Backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.download = `Student_Guidance_Database_Backup_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     showToast("Database exported to JSON!");

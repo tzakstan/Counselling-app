@@ -1,5 +1,5 @@
-// Service Worker for Saire Ilmi PWA
-const CACHE_NAME = 'saire-ilmi-v1';
+// Service Worker for Student Guidance & Counselling PWA
+const CACHE_NAME = 'guidance-hub-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/static/style.css',

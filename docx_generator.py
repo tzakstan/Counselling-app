@@ -43,13 +43,13 @@ def generate_student_docx(student: Student) -> io.BytesIO:
     # Header / Title Block
     title_p = doc.add_paragraph()
     title_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_inst = title_p.add_run("AL JAMEA TUS SAIFIYAH\n")
+    run_inst = title_p.add_run("STUDENT COUNSELLING & GUIDANCE DEPARTMENT\n")
     run_inst.font.name = "Georgia"
     run_inst.font.size = Pt(16)
     run_inst.font.bold = True
     run_inst.font.color.rgb = EMERALD
 
-    run_sub = title_p.add_run("SAIRE ILMI PROGRAM — COUNSELLING & EVALUATION REPORT\n")
+    run_sub = title_p.add_run("ADOLESCENT DEVELOPMENT & EVALUATION REPORT\n")
     run_sub.font.name = "Calibri"
     run_sub.font.size = Pt(11)
     run_sub.font.bold = True
@@ -131,7 +131,7 @@ def generate_student_docx(student: Student) -> io.BytesIO:
         add_section("2. Emotional Profile & Self-Concept", student.report.emotional_profile)
         add_section("3. Social & Family Ecosystem", student.report.social_family_dynamics)
         add_section("4. Academic Orientation & Future Aspirations", student.report.academic_future_outlook)
-        add_section("5. Institutional & Spiritual Value Alignment (Saire Ilmi Ethos)", student.report.institutional_value_alignment)
+        add_section("5. Values & Character Development Alignment", student.report.institutional_value_alignment)
 
         # Observations Rubric Table
         h_obs = doc.add_paragraph()
@@ -184,7 +184,7 @@ def generate_student_docx(student: Student) -> io.BytesIO:
     p_sig = doc.add_paragraph()
     p_sig.paragraph_format.space_before = Pt(24)
     p_sig.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r_sig = p_sig.add_run("_______________________________\nCounsellor Signature & Date\nAl Jamea tus Saifiyah")
+    r_sig = p_sig.add_run("_______________________________\nCounsellor Signature & Date\nAdolescent Guidance Department")
     r_sig.font.size = Pt(9.5)
     r_sig.font.color.rgb = DARK_GRAY
 
@@ -207,13 +207,13 @@ def generate_cumulative_docx(cumulative: CumulativeReport) -> io.BytesIO:
     # Header
     title_p = doc.add_paragraph()
     title_p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    run_inst = title_p.add_run("AL JAMEA TUS SAIFIYAH\n")
+    run_inst = title_p.add_run("STUDENT COUNSELLING & GUIDANCE DEPARTMENT\n")
     run_inst.font.name = "Georgia"
     run_inst.font.size = Pt(17)
     run_inst.font.bold = True
     run_inst.font.color.rgb = EMERALD
 
-    run_sub = title_p.add_run("SAIRE ILMI PROGRAM — CUMULATIVE COHORT EVALUATION DOSSIER\n")
+    run_sub = title_p.add_run("ADOLESCENT COHORT EVALUATION & GUIDANCE DOSSIER\n")
     run_sub.font.name = "Calibri"
     run_sub.font.size = Pt(12)
     run_sub.font.bold = True
@@ -338,7 +338,7 @@ def generate_cumulative_docx(cumulative: CumulativeReport) -> io.BytesIO:
     # Management Recommendations
     h5 = doc.add_paragraph()
     h5.paragraph_format.space_before = Pt(14)
-    r_h5 = h5.add_run("5. Recommendations for Saire Ilmi Management & Mentors")
+    r_h5 = h5.add_run("5. Recommendations for Program Management & Mentors")
     r_h5.font.bold = True
     r_h5.font.size = Pt(12)
     r_h5.font.color.rgb = EMERALD
@@ -353,7 +353,7 @@ def generate_cumulative_docx(cumulative: CumulativeReport) -> io.BytesIO:
     p_sig = doc.add_paragraph()
     p_sig.paragraph_format.space_before = Pt(30)
     p_sig.alignment = WD_ALIGN_PARAGRAPH.RIGHT
-    r_sig = p_sig.add_run("_______________________________\nLead Counsellor & Program Director\nAl Jamea tus Saifiyah")
+    r_sig = p_sig.add_run("_______________________________\nLead Counsellor & Program Director\nStudent Guidance Department")
     r_sig.font.size = Pt(9.5)
     r_sig.font.color.rgb = DARK_GRAY
 

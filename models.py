@@ -92,7 +92,7 @@ class UserProfile(BaseModel):
     role: str  # "counsellor" or "management"
 
 class CumulativeReport(BaseModel):
-    title: str = "Saire Ilmi Counselling Program - Cumulative Conclusive Cohort Dossier"
+    title: str = "Adolescent Guidance Program - Cumulative Conclusive Cohort Dossier"
     generated_at: str
     total_evaluated: int
     triage_counts: Dict[str, int]

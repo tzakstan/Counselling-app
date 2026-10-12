@@ -12,14 +12,14 @@ DEFAULT_USERS = {
     "counsellor": {
         "id": "usr-counsellor",
         "username": "counsellor",
-        "password": "jamea@counsellor",
+        "password": "counsel@2026",
         "name": "Lead Counsellor",
         "role": "counsellor"
     },
     "management": {
         "id": "usr-mgmt",
         "username": "management",
-        "password": "jamea@management",
+        "password": "mgmt@2026",
         "name": "Program Management",
         "role": "management"
     }

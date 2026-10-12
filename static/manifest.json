@@ -1,7 +1,7 @@
 {
-  "name": "Saire Ilmi Counselling Hub",
-  "short_name": "Saire Ilmi",
-  "description": "Student Counselling & Psychological Evaluation System for Al Jamea tus Saifiyah",
+  "name": "Student Counselling & Guidance Hub",
+  "short_name": "Counselling Hub",
+  "description": "Adolescent Counselling & Psychological Evaluation System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#143829",

@@ -29,7 +29,7 @@ def generate_individual_report(student: Student) -> GeneratedReport:
             client = genai.Client(api_key=api_key)
             
             prompt = f"""
-You are an expert child and adolescent psychologist and educational counsellor writing a formal evaluation report for a student participating in the 'Saire Ilmi' program at Al Jamea tus Saifiyah.
+You are an expert child and adolescent psychologist and educational counsellor writing a formal evaluation report for a student participating in an intensive adolescent mentorship and development program.
 The student is a boy aged {student.age}.
 
 Here is the student's background and raw interaction data from the 1-on-1 session:
@@ -58,7 +58,7 @@ RAW QUESTIONNAIRE RESPONSES:
 - Magic button change wish: {student.questionnaire.magic_button_wish}
 - Session feeling: {student.questionnaire.session_feeling}
 - Takeaway: {student.questionnaire.takeaway}
-- Moula's guidance in practice: {student.questionnaire.moula_guidance_practice}
+- Spiritual & moral guidance in practice: {student.questionnaire.moula_guidance_practice}
 
 COUNSELLOR CLINICAL OBSERVATIONS:
 - Emotional Expression: {student.observations.emotional_expression}
@@ -82,7 +82,7 @@ Return ONLY a valid JSON object matching this schema:
   "emotional_profile": "Analysis of self-concept, overthinking patterns, insecurities, and coping strategies.",
   "social_family_dynamics": "Analysis of support network, family climate, peer relations, and emotional safety.",
   "academic_future_outlook": "Evaluation of intrinsic vs extrinsic motivation, career ambitions, and barriers.",
-  "institutional_value_alignment": "Analysis of his alignment with Saire Ilmi ethos, spiritual discipline (Namaaz, reducing digital distractions, implementing Moula's guidance).",
+  "institutional_value_alignment": "Analysis of his personal values, spiritual discipline (Namaaz, reducing digital distractions, moral guidance).",
   "clinical_synthesis": "Formal clinical summary weaving the 10 observation dimensions together.",
   "counsellor_remarks": "Refined and expanded professional remarks based on raw notes.",
   "prescribed_exercises": "Concrete, actionable exercises or routines recommended (e.g., journaling, mindfulness, screen-time log, etc.).",
@@ -108,7 +108,7 @@ Return ONLY a valid JSON object matching this schema:
 def _synthesize_expert_individual_report(student: Student) -> GeneratedReport:
     """
     Intelligent fallback synthesizer that creates high-fidelity clinical reports
-    based on adolescent psychology frameworks tailored for Saire Ilmi.
+    based on adolescent psychology frameworks tailored for student development.
     """
     q = student.questionnaire
     obs = student.observations
@@ -134,11 +134,11 @@ def _synthesize_expert_individual_report(student: Student) -> GeneratedReport:
 
     # Executive Summary
     exec_summary = (
-        f"{display_name} (Age {student.age}) participated openly in the one-on-one Saire Ilmi counselling evaluation session. "
+        f"{display_name} (Age {student.age}) participated openly in the one-on-one adolescent counselling evaluation session. "
         f"He presents with a {obs.confidence_level.lower()} demeanor, exhibiting an emotional expression described as {obs.emotional_expression.lower()} "
         f"and {obs.emotional_maturity.lower()} developmental maturity. "
         f"Throughout the interaction, he demonstrated a healthy degree of introspective awareness, engaging meaningfully with questions regarding his "
-        f"personal habits, peer bonds, and long-term aspirations within the Al Jamea tus Saifiyah environment."
+        f"personal habits, peer bonds, and long-term aspirations within the educational environment."
     )
 
     # Emotional Profile
@@ -174,10 +174,10 @@ def _synthesize_expert_individual_report(student: Student) -> GeneratedReport:
     # Institutional & Spiritual Value Alignment
     moula_practice = q.moula_guidance_practice if q.moula_guidance_practice else "cultivating discipline and spiritual mindfulness"
     spiritual_alignment = (
-        f"A focal pillar of the Saire Ilmi program is inculcating core values of Al Jamea tus Saifiyah. "
-        f"The candidate illustrates commendable spiritual discipline, voluntarily highlighting punctuality in his morning spiritual obligations ('{q.strengths_rely_on or 'morning Namaaz wake up'}'). "
-        f"When reflecting upon the guidance of al-Dai al-Ajal Syedna Mufaddal Saifuddin TUS, he articulates an active effort toward: '{moula_practice}'. "
-        f"This conscious effort toward digital moderation and personal discipline mirrors the foundational ethos of Jamea."
+        f"A focal pillar of the student development program is personal integrity and ethical grounding. "
+        f"The candidate illustrates commendable spiritual discipline, voluntarily highlighting punctuality in his morning spiritual obligations ('{q.strengths_rely_on or 'morning prayer wake up'}'). "
+        f"When reflecting upon personal and spiritual guidance, he articulates an active effort toward: '{moula_practice}'. "
+        f"This conscious effort toward digital moderation and personal discipline mirrors foundational moral values."
     )
 
     # Clinical Synthesis
@@ -193,7 +193,7 @@ def _synthesize_expert_individual_report(student: Student) -> GeneratedReport:
 
     exercise = student.prescribed_exercise_raw if student.prescribed_exercise_raw else (
         "1. Daily habit tracking for screen-time mindfulness.\n"
-        "2. Continued peer collaboration and mentoring during Saire Ilmi group tasks.\n"
+        "2. Continued peer collaboration and mentoring during group activities.\n"
         "3. Solution-oriented cognitive reframing whenever exam or evaluation anxiety surfaces."
     )
 
@@ -262,7 +262,7 @@ def generate_cumulative_report(students: List[Student]) -> CumulativeReport:
 
     exec_overview = (
         f"This conclusive dossier encapsulates the pastoral and psychological findings from the one-on-one counselling evaluations conducted "
-        f"during the Saire Ilmi program at Al Jamea tus Saifiyah. A total of {total} adolescent male students (ages 13–16) completed their intake and clinical evaluations. "
+        f"during the adolescent guidance program. A total of {total} adolescent male students (ages 13–16) completed their intake and clinical evaluations. "
         f"Overall, {well_pct}% of the cohort demonstrate robust psychological resilience and harmonious adaptation to the campus environment. "
         f"{mild_pct}% require light observational mentoring, and {req_pct}% have been prioritized for structured follow-up sessions before the conclusion of the program."
     )
@@ -270,7 +270,7 @@ def generate_cumulative_report(students: List[Student]) -> CumulativeReport:
     key_themes = [
         {
             "theme": "Digital Moderation & Screen Addiction Awareness",
-            "observation": "Over 75% of boys explicitly identified phone usage and social media as habits they are actively working to curtail in response to Moula's guidance. Many expressed relief at the structured schedule of Jamea."
+            "observation": "Over 75% of boys explicitly identified phone usage and social media as habits they are actively working to curtail in response to moral guidance. Many expressed relief at the structured schedule of the camp."
         },
         {
             "theme": "Academic Rumination vs Solution-Orientation",
@@ -281,15 +281,15 @@ def generate_cumulative_report(students: List[Student]) -> CumulativeReport:
             "observation": "Most candidates identified immediate family members (parents, elder siblings) as primary confidantes. Familial pressure was predominantly low or positive, though students in transition years (age 15-16) felt self-imposed pressure regarding future career clarity (MBBS, engineering, commerce)."
         },
         {
-            "theme": "Spiritual Discipline & Namaaz Habituation",
-            "observation": "Punctuality for morning Namaaz and participation in communal prayers emerged as high points of personal pride and community belonging among the cohort."
+            "theme": "Spiritual Discipline & Habituation",
+            "observation": "Punctuality for morning prayer and participation in communal spiritual activities emerged as high points of personal pride and community belonging among the cohort."
         }
     ]
 
     spiritual_summary = (
-        f"The students' internal assimilation of the teachings of al-Dai al-Ajal Syedna Mufaddal Saifuddin TUS was a defining highlight of the evaluations. "
+        f"The students' internal assimilation of moral and spiritual values was a defining highlight of the evaluations. "
         f"When probed on personal application, recurrent themes included: reducing unnecessary phone screen time, honoring parents and elders, "
-        f"punctuality in Namaaz, and fostering honest, dependable peer relationships. The Saire Ilmi environment serves as an effective catalyst for translating these values into daily routine."
+        f"punctuality in prayer, and fostering honest, dependable peer relationships. The structured environment serves as an effective catalyst for translating these values into daily routine."
     )
 
     recommendations = [
