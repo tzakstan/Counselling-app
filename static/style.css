@@ -66,23 +66,28 @@ h1, h2, h3, .font-serif {
 
 /* Print Styles for PDF generation via Browser Print */
 @media print {
-  body * {
-    visibility: hidden;
+  html, body {
+    background: white !important;
+    height: auto !important;
+    overflow: visible !important;
   }
-  
-  #printable-dossier, #printable-dossier * {
-    visibility: visible;
+
+  body > *:not(#printable-dossier) {
+    display: none !important;
   }
 
   #printable-dossier {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    margin: 0;
-    padding: 20px;
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
     background: white !important;
-    box-shadow: none !important;
+  }
+
+  #printable-dossier * {
+    visibility: visible !important;
   }
 
   .no-print {
@@ -90,8 +95,9 @@ h1, h2, h3, .font-serif {
   }
 
   @page {
-    size: A4;
+    size: A4 portrait;
     margin: 1.5cm;
   }
 }
+
 

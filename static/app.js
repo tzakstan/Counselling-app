@@ -903,112 +903,181 @@ function printStudentReport() {
   const dispPlace = student.is_confidential ? '[City Masked]' : student.place;
   const dispParents = student.is_confidential ? '[Family Details Confidential]' : `Father: ${student.fathers_occupation} | Mother: ${student.mothers_occupation}`;
 
-  const printable = document.getElementById('printable-dossier');
-  printable.innerHTML = `
-    <div style="font-family: 'Georgia', serif; color: #1e293b; max-width: 800px; margin: 0 auto;">
-      
-      <!-- Letterhead Header -->
-      <div style="text-align: center; border-bottom: 2px solid #b48e3c; padding-bottom: 15px; margin-bottom: 20px;">
-        <h1 style="color: #143829; font-size: 24px; margin: 0; font-weight: bold; letter-spacing: 1px;">AL JAMEA TUS SAIFIYAH</h1>
-        <h3 style="color: #b48e3c; font-size: 13px; margin: 5px 0 0 0; text-transform: uppercase; font-family: sans-serif; font-weight: bold;">
-          Saire Ilmi Program — Student Counselling & Psychological Evaluation
-        </h3>
-        <p style="font-size: 11px; color: #64748b; margin-top: 4px; font-family: sans-serif;">Official Pastoral Record • Academic Year 1448H</p>
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Saire Ilmi Report - ${dispName}</title>
+      <style>
+        body { font-family: 'Georgia', serif; color: #1e293b; padding: 25px; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid #b48e3c; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { color: #143829; font-size: 22px; margin: 0; font-weight: bold; letter-spacing: 1px; }
+        .header h3 { color: #b48e3c; font-size: 13px; margin: 5px 0 0 0; text-transform: uppercase; font-family: sans-serif; font-weight: bold; }
+        .header p { font-size: 11px; color: #64748b; margin-top: 4px; font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; font-family: sans-serif; background: #f8fafc; border: 1px solid #e2e8f0; }
+        td { padding: 8px 12px; border: 1px solid #e2e8f0; }
+        h4 { color: #143829; font-family: Georgia, serif; font-size: 14px; margin: 16px 0 6px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+        p { font-size: 12.5px; margin: 0 0 10px 0; font-family: sans-serif; }
+        .remarks { font-weight: 500; color: #143829; }
+        .exercises { white-space: pre-line; background: #f8fafc; padding: 10px; border-radius: 6px; border-left: 3px solid #143829; }
+        .signatures { margin-top: 45px; display: flex; justify-content: space-between; font-size: 11px; font-family: sans-serif; color: #475569; }
+        @media print {
+          body { padding: 0; }
+          @page { size: A4 portrait; margin: 1.5cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>AL JAMEA TUS SAIFIYAH</h1>
+        <h3>Saire Ilmi Program — Student Counselling & Psychological Evaluation</h3>
+        <p>Official Pastoral Record • Academic Year 1448H</p>
       </div>
 
-      <!-- Demographics Table -->
-      <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 12px; font-family: sans-serif; background: #f8fafc; border: 1px solid #e2e8f0;">
+      <table>
         <tr>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;"><b>Candidate Name:</b> ${dispName}</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;"><b>Age:</b> ${student.age} Years</td>
+          <td><b>Candidate Name:</b> ${dispName}</td>
+          <td><b>Age:</b> ${student.age} Years</td>
         </tr>
         <tr>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;"><b>Origin:</b> ${dispPlace}</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;"><b>Program Batch:</b> ${student.batch}</td>
+          <td><b>Origin / Place:</b> ${dispPlace}</td>
+          <td><b>Program Batch:</b> ${student.batch}</td>
         </tr>
         <tr>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;"><b>Family Background:</b> ${dispParents}</td>
-          <td style="padding: 8px; border: 1px solid #e2e8f0;"><b>Triage Status:</b> <span style="font-weight: bold;">${student.report.triage_status}</span></td>
+          <td><b>Family Background:</b> ${dispParents}</td>
+          <td><b>Triage Status:</b> <b>${student.report.triage_status}</b></td>
         </tr>
       </table>
 
-      <!-- Sections -->
-      <div style="font-size: 13px; line-height: 1.6; font-family: 'Plus Jakarta Sans', sans-serif;">
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">1. Executive Summary & Program Adaptation</h4>
-        <p style="margin: 0 0 12px 0;">${student.report.executive_summary}</p>
+      <h4>1. Executive Summary & Program Adaptation</h4>
+      <p>${student.report.executive_summary}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">2. Emotional Profile & Self-Concept</h4>
-        <p style="margin: 0 0 12px 0;">${student.report.emotional_profile}</p>
+      <h4>2. Emotional Profile, Self-Concept & Coping Mechanisms</h4>
+      <p>${student.report.emotional_profile}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">3. Social & Family Dynamics</h4>
-        <p style="margin: 0 0 12px 0;">${student.report.social_family_dynamics}</p>
+      <h4>3. Social & Family Ecosystem</h4>
+      <p>${student.report.social_family_dynamics}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">4. Academic & Future Aspirations</h4>
-        <p style="margin: 0 0 12px 0;">${student.report.academic_future_outlook}</p>
+      <h4>4. Academic Orientation & Future Aspirations</h4>
+      <p>${student.report.academic_future_outlook}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">5. Institutional & Spiritual Value Alignment (Saire Ilmi Ethos)</h4>
-        <p style="margin: 0 0 12px 0;">${student.report.institutional_value_alignment}</p>
+      <h4>5. Institutional & Spiritual Value Alignment (Saire Ilmi Ethos)</h4>
+      <p>${student.report.institutional_value_alignment}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">6. Counsellor's Professional Remarks & Clinical Judgement</h4>
-        <p style="margin: 0 0 12px 0; font-weight: 500; color: #143829;">${student.report.counsellor_remarks}</p>
+      <h4>6. Counsellor's Professional Remarks & Clinical Judgement</h4>
+      <p class="remarks">${student.report.counsellor_remarks}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">7. Prescribed Exercises & Recommended Habits</h4>
-        <p style="margin: 0 0 12px 0; white-space: pre-line;">${student.report.prescribed_exercises}</p>
+      <h4>7. Prescribed Exercises & Recommended Routines</h4>
+      <p class="exercises">${student.report.prescribed_exercises}</p>
 
-        ${student.report.follow_up_notes ? `
-          <h4 style="color: #991b1b; font-family: Georgia, serif; font-size: 15px; margin: 15px 0 5px 0; border-bottom: 1px solid #fee2e2; padding-bottom: 4px;">8. Follow-up / Pastoral Action Plan</h4>
-          <p style="margin: 0 0 12px 0; color: #7f1d1d;">${student.report.follow_up_notes}</p>
-        ` : ''}
-      </div>
+      ${student.report.follow_up_notes ? `
+        <h4 style="color: #991b1b; border-bottom-color: #fee2e2;">8. Follow-up / Pastoral Action Plan</h4>
+        <p style="color: #7f1d1d;">${student.report.follow_up_notes}</p>
+      ` : ''}
 
-      <!-- Signatures Block -->
-      <div style="margin-top: 40px; display: flex; justify-content: space-between; font-size: 11px; font-family: sans-serif; color: #475569;">
+      <div class="signatures">
         <div>
-          <p>Date of Evaluation: ${new Date(student.created_at).toLocaleDateString()}</p>
-          <p>Verification Code: ${student.id}</p>
+          <p>Evaluation Date: ${new Date(student.created_at).toLocaleDateString()}</p>
+          <p>Record ID: ${student.id}</p>
         </div>
         <div style="text-align: right;">
           <p>_____________________________________</p>
           <p>Lead Counsellor & Pastoral Evaluator<br>Al Jamea tus Saifiyah</p>
         </div>
       </div>
-    </div>
+    </body>
+    </html>
   `;
 
-  window.print();
+  const printWindow = window.open('', '_blank', 'width=850,height=900');
+  printWindow.document.open();
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+  }, 350);
 }
 
 function printCumulativeReport() {
   if (!state.cumulativeData) return;
   const d = state.cumulativeData;
 
-  const printable = document.getElementById('printable-dossier');
-  printable.innerHTML = `
-    <div style="font-family: Georgia, serif; color: #1e293b; max-width: 800px; margin: 0 auto;">
-      <div style="text-align: center; border-bottom: 2px solid #b48e3c; padding-bottom: 15px; margin-bottom: 20px;">
-        <h1 style="color: #143829; font-size: 24px; margin: 0; font-weight: bold;">AL JAMEA TUS SAIFIYAH</h1>
-        <h3 style="color: #b48e3c; font-size: 13px; margin: 5px 0 0 0; text-transform: uppercase; font-family: sans-serif; font-weight: bold;">
-          Saire Ilmi Program — Cumulative Conclusive Cohort Dossier
-        </h3>
-        <p style="font-size: 11px; color: #64748b; margin-top: 4px; font-family: sans-serif;">Generated: ${d.generated_at} | Total Candidates Counselled: ${d.total_evaluated}</p>
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Saire Ilmi - Cumulative Cohort Dossier</title>
+      <style>
+        body { font-family: 'Georgia', serif; color: #1e293b; padding: 25px; line-height: 1.6; }
+        .header { text-align: center; border-bottom: 2px solid #b48e3c; padding-bottom: 15px; margin-bottom: 20px; }
+        .header h1 { color: #143829; font-size: 22px; margin: 0; font-weight: bold; }
+        .header h3 { color: #b48e3c; font-size: 13px; margin: 5px 0 0 0; text-transform: uppercase; font-family: sans-serif; font-weight: bold; }
+        .header p { font-size: 11px; color: #64748b; margin-top: 4px; font-family: sans-serif; }
+        h4 { color: #143829; font-family: Georgia, serif; font-size: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-top: 20px; }
+        p, li { font-size: 12.5px; font-family: sans-serif; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; font-family: sans-serif; }
+        th, td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+        th { background: #f1f5f9; }
+        @media print {
+          body { padding: 0; }
+          @page { size: A4 portrait; margin: 1.5cm; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>AL JAMEA TUS SAIFIYAH</h1>
+        <h3>Saire Ilmi Program — Cumulative Conclusive Cohort Dossier</h3>
+        <p>Generated: ${d.generated_at} | Total Candidates Counselled: ${d.total_evaluated}</p>
       </div>
 
-      <div style="font-size: 13px; line-height: 1.6; font-family: sans-serif;">
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; border-bottom: 1px solid #e2e8f0;">1. Executive Pastoral Overview</h4>
-        <p>${d.executive_overview}</p>
+      <h4>1. Executive Pastoral Overview</h4>
+      <p>${d.executive_overview}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; border-bottom: 1px solid #e2e8f0; margin-top: 20px;">2. Spiritual Assimilation & Moula's Guidance</h4>
-        <p>${d.spiritual_value_integration_summary}</p>
+      <h4>2. Spiritual Assimilation & Moula's Guidance</h4>
+      <p>${d.spiritual_value_integration_summary}</p>
 
-        <h4 style="color: #143829; font-family: Georgia, serif; font-size: 15px; border-bottom: 1px solid #e2e8f0; margin-top: 20px;">3. Strategic Recommendations</h4>
-        <ul>
-          ${d.management_recommendations.map(r => `<li>${r}</li>`).join('')}
-        </ul>
-      </div>
-    </div>
+      ${d.action_roster_high_risk && d.action_roster_high_risk.length > 0 ? `
+        <h4>3. Action Roster (Candidates Requiring Continued Attention)</h4>
+        <table>
+          <thead>
+            <tr>
+              <th>Candidate</th>
+              <th>Triage Level</th>
+              <th>Primary Concern</th>
+              <th>Recommended Next Step</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${d.action_roster_high_risk.map(item => `
+              <tr>
+                <td><b>${item.name}</b> (${item.age}y, ${item.origin})</td>
+                <td>${item.triage}</td>
+                <td>${item.key_concern}</td>
+                <td>${item.action_recommended}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      ` : ''}
+
+      <h4>4. Strategic Recommendations for Organizers</h4>
+      <ul>
+        ${d.management_recommendations.map(r => `<li>${r}</li>`).join('')}
+      </ul>
+    </body>
+    </html>
   `;
 
-  window.print();
+  const printWindow = window.open('', '_blank', 'width=850,height=900');
+  printWindow.document.open();
+  printWindow.document.write(htmlContent);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+  }, 350);
 }
 
 // ----------------------------------------------------
