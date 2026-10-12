@@ -929,6 +929,7 @@ function printStudentReport() {
     </head>
     <body>
       <div class="header">
+        <img src="/static/logo.png" alt="Saire Ilmi Logo" style="width: 80px; height: auto; margin-bottom: 8px;">
         <h1>AL JAMEA TUS SAIFIYAH</h1>
         <h3>Saire Ilmi Program — Student Counselling & Psychological Evaluation</h3>
         <p>Official Pastoral Record • Academic Year 1448H</p>
@@ -1027,6 +1028,7 @@ function printCumulativeReport() {
     </head>
     <body>
       <div class="header">
+        <img src="/static/logo.png" alt="Saire Ilmi Logo" style="width: 85px; height: auto; margin-bottom: 8px;">
         <h1>AL JAMEA TUS SAIFIYAH</h1>
         <h3>Saire Ilmi Program — Cumulative Conclusive Cohort Dossier</h3>
         <p>Generated: ${d.generated_at} | Total Candidates Counselled: ${d.total_evaluated}</p>
