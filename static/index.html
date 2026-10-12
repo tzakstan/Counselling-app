@@ -185,6 +185,11 @@
               <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
               <span>Generate AI Report</span>
             </button>
+
+            <!-- Delete Candidate Button -->
+            <button onclick="confirmDeleteActiveStudent()" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition border border-transparent hover:border-red-200" title="Delete Student Entry">
+              <i data-lucide="trash-2" class="w-4 h-4"></i>
+            </button>
           </div>
         </div>
 
@@ -739,33 +744,100 @@
   </div>
 
   <!-- ==================================================== -->
-  <!-- MODAL: API KEY SETTINGS                              -->
+  <!-- MODAL: EXPANDED SETTINGS                            -->
   <!-- ==================================================== -->
   <div id="settings-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      
       <div class="flex items-center justify-between mb-4 border-b pb-3">
-        <h3 class="font-serif font-bold text-slate-900 text-base flex items-center gap-2">
-          <i data-lucide="key" class="w-4 h-4 text-emerald-700"></i>
-          <span>Gemini AI Engine Configuration</span>
+        <h3 class="font-serif font-bold text-slate-900 text-lg flex items-center gap-2">
+          <i data-lucide="sliders" class="w-5 h-5 text-emerald-700"></i>
+          <span>System & Account Settings</span>
         </h3>
         <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-slate-600">
-          <i data-lucide="x" class="w-4 h-4"></i>
+          <i data-lucide="x" class="w-5 h-5"></i>
         </button>
       </div>
 
-      <p class="text-xs text-slate-600 mb-3 leading-relaxed">
-        The app includes an intelligent embedded adolescent psychology synthesis engine that works immediately. You can also provide a <b>Gemini API Key</b> to enable live Gemini 2.5 Flash synthesis.
-      </p>
+      <div class="space-y-6 text-xs">
+        
+        <!-- SECTION 1: ACCOUNT CREDENTIALS & DISPLAY NAME -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <i data-lucide="user-cog" class="w-4 h-4 text-emerald-700"></i>
+            <span>1. Edit Login Details & Display Name</span>
+          </h4>
+          <p class="text-slate-500 mb-3">Update your display name, login username, or change password.</p>
 
-      <div class="mb-4">
-        <label class="block font-semibold text-xs text-slate-700 mb-1">Google Gemini API Key</label>
-        <input id="input-api-key" type="password" placeholder="AIzaSy..." class="w-full p-2.5 border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-emerald-600">
+          <div class="space-y-3">
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">Your Full Display Name</label>
+              <input id="setting-display-name" type="text" placeholder="e.g. Counsellor Fatima / Sheikh Shabbir" 
+                     class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">Login Username</label>
+                <input id="setting-username" type="text" placeholder="e.g. counsellor or your email" 
+                       class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+              <div>
+                <label class="block font-semibold text-slate-700 mb-1">New Password (leave blank to keep)</label>
+                <input id="setting-password" type="password" placeholder="••••••••" 
+                       class="w-full p-2 border border-slate-300 rounded-lg bg-white">
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+              <button onclick="saveAccountSettings()" class="px-4 py-1.5 bg-emerald-800 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm">
+                Save Account Changes
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECTION 2: AI ENGINE CONFIGURATION -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200">
+          <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="w-4 h-4 text-emerald-700"></i>
+            <span>2. Gemini AI Engine Configuration</span>
+          </h4>
+          <p class="text-slate-500 mb-3">
+            The built-in expert clinical engine is always active. You can add a Google Gemini API Key for live AI generation.
+          </p>
+          <div class="flex gap-2">
+            <input id="input-api-key" type="password" placeholder="Paste Gemini API Key (AIzaSy...)" 
+                   class="flex-1 p-2 border border-slate-300 rounded-lg bg-white">
+            <button onclick="saveApiKey()" class="px-4 py-2 bg-jamea text-white font-semibold rounded-lg hover:bg-jamea-light shadow-sm">
+              Save Key
+            </button>
+          </div>
+        </div>
+
+        <!-- SECTION 3: DATA MANAGEMENT & BACKUP -->
+        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+          <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <i data-lucide="database" class="w-4 h-4 text-emerald-700"></i>
+            <span>3. Data Management & Local Backup</span>
+          </h4>
+          <p class="text-slate-500 mb-3">Download a full backup of all session evaluations, questionnaires, and notes as JSON.</p>
+          <div class="flex items-center gap-3">
+            <button onclick="exportAllDataJson()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-lg flex items-center gap-1.5 shadow-sm">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Export Full Database (JSON)</span>
+            </button>
+          </div>
+        </div>
+
       </div>
 
-      <div class="flex items-center justify-end gap-2 text-xs">
-        <button onclick="closeSettingsModal()" class="px-3 py-1.5 text-slate-600 hover:text-slate-800">Cancel</button>
-        <button onclick="saveApiKey()" class="px-4 py-1.5 bg-jamea text-white font-semibold rounded-lg hover:bg-jamea-light shadow">Save Key</button>
+      <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+        <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 font-semibold rounded-lg text-slate-700 text-xs">
+          Close Settings
+        </button>
       </div>
+
     </div>
   </div>
 

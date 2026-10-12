@@ -7,11 +7,12 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
 
-from models import Student, GeneratedReport, Comment, CumulativeReport, LoginRequest, UserProfile
+from models import Student, GeneratedReport, Comment, CumulativeReport, LoginRequest, UserProfile, UpdateUserRequest
 from data_store import (
     load_students,
     get_student_by_id,
     save_or_update_student,
+    delete_student,
     get_or_create_cumulative_report
 )
 from gemini_service import (
@@ -20,44 +21,14 @@ from gemini_service import (
     get_api_key
 )
 from docx_generator import generate_student_docx, generate_cumulative_docx
+from auth_service import load_users, update_user_profile
 
 app = FastAPI(title="Saire Ilmi Counselling & Evaluation System")
 
-# Registered accounts
-USERS_DB = {
-    "counsellor": {
-        "id": "usr-counsellor",
-        "username": "counsellor",
-        "password": "jamea@counsellor",
-        "name": "Dr. Amatullah (Lead Counsellor)",
-        "role": "counsellor"
-    },
-    "counsellor@jamea.edu": {
-        "id": "usr-counsellor",
-        "username": "counsellor",
-        "password": "jamea@counsellor",
-        "name": "Dr. Amatullah (Lead Counsellor)",
-        "role": "counsellor"
-    },
-    "management": {
-        "id": "usr-mgmt",
-        "username": "management",
-        "password": "jamea@management",
-        "name": "Shk. Murtaza (Program Director)",
-        "role": "management"
-    },
-    "management@jamea.edu": {
-        "id": "usr-mgmt",
-        "username": "management",
-        "password": "jamea@management",
-        "name": "Shk. Murtaza (Program Director)",
-        "role": "management"
-    }
-}
-
 @app.post("/api/auth/login", response_model=UserProfile)
 def login(creds: LoginRequest):
-    u = USERS_DB.get(creds.username.strip().lower())
+    users = load_users()
+    u = users.get(creds.username.strip().lower())
     if not u or u["password"] != creds.password.strip():
         raise HTTPException(status_code=401, detail="Invalid username or password")
     return UserProfile(
@@ -66,6 +37,32 @@ def login(creds: LoginRequest):
         name=u["name"],
         role=u["role"]
     )
+
+@app.put("/api/auth/profile", response_model=UserProfile)
+def update_profile(req: UpdateUserRequest):
+    try:
+        updated = update_user_profile(
+            user_id=req.user_id,
+            new_name=req.name,
+            new_username=req.username,
+            new_password=req.password
+        )
+        return UserProfile(
+            id=updated["id"],
+            username=updated["username"],
+            name=updated["name"],
+            role=updated["role"]
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+@app.delete("/api/students/{student_id}")
+def delete_student_endpoint(student_id: str):
+    success = delete_student(student_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return {"status": "success", "deleted_id": student_id}
+
 
 
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")

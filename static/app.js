@@ -1094,14 +1094,106 @@ async function createNewStudent() {
 }
 
 // ----------------------------------------------------
-// Settings & API Key
+// Settings & Account Credential Management
 // ----------------------------------------------------
 function openSettingsModal() {
-  document.getElementById('settings-modal').classList.remove('hidden');
+  const modal = document.getElementById('settings-modal');
+  if (!modal) return;
+  modal.classList.remove('hidden');
+
+  if (state.currentUser) {
+    document.getElementById('setting-display-name').value = state.currentUser.name || '';
+    document.getElementById('setting-username').value = state.currentUser.username || '';
+    document.getElementById('setting-password').value = '';
+  }
 }
 
 function closeSettingsModal() {
   document.getElementById('settings-modal').classList.add('hidden');
+}
+
+async function saveAccountSettings() {
+  if (!state.currentUser) return;
+  const name = document.getElementById('setting-display-name').value.trim();
+  const username = document.getElementById('setting-username').value.trim();
+  const password = document.getElementById('setting-password').value.trim();
+
+  if (!name || !username) {
+    alert("Display name and username cannot be blank.");
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        user_id: state.currentUser.id,
+        name: name,
+        username: username,
+        password: password || null
+      })
+    });
+    if (!res.ok) throw new Error('Failed to update credentials');
+    const updated = await res.json();
+    state.currentUser = updated;
+    localStorage.setItem('saire_ilmi_user', JSON.stringify(updated));
+    applyUserRole(updated);
+    closeSettingsModal();
+    showToast("Account credentials updated successfully!");
+  } catch (err) {
+    alert("Error: " + err.message);
+  }
+}
+
+async function exportAllDataJson() {
+  try {
+    const res = await fetch('/api/students');
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Saire_Ilmi_Database_Backup_${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast("Database exported to JSON!");
+  } catch (err) {
+    alert("Export failed: " + err.message);
+  }
+}
+
+// ----------------------------------------------------
+// Delete Candidate Entry
+// ----------------------------------------------------
+async function confirmDeleteActiveStudent() {
+  if (!state.activeStudentId) return;
+  const student = state.students.find(s => s.id === state.activeStudentId);
+  const studentName = student ? (student.is_confidential ? `Candidate ${student.id}` : student.name) : "this student";
+
+  if (!confirm(`Are you sure you want to permanently delete ${studentName}? This action cannot be undone.`)) {
+    return;
+  }
+
+  try {
+    const res = await fetch(`/api/students/${state.activeStudentId}`, {
+      method: 'DELETE'
+    });
+    if (!res.ok) throw new Error('Deletion failed');
+
+    state.students = state.students.filter(s => s.id !== state.activeStudentId);
+    showToast(`${studentName} removed from roster.`);
+
+    if (state.students.length > 0) {
+      selectStudent(state.students[0].id);
+    } else {
+      createNewStudent();
+    }
+    renderStudentList();
+    renderManagementDashboard();
+  } catch (err) {
+    alert("Delete error: " + err.message);
+  }
 }
 
 async function saveApiKey() {

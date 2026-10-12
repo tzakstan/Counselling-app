@@ -79,6 +79,12 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class UpdateUserRequest(BaseModel):
+    user_id: str
+    name: str
+    username: str
+    password: Optional[str] = None
+
 class UserProfile(BaseModel):
     id: str
     username: str
